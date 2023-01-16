@@ -1,0 +1,75 @@
+body {
+  background: #282831;
+  /* cursor: url("/img/speaker-2-fill-svgrepo-com.svg"), wait; */
+  /* cursor: url("/img/mac-cursor-6.png"), auto; */
+  /* cursor: url("http://wiki-devel.sugarlabs.org/images/e/e2/Arrow.cur") 16 16,
+    auto; */
+}
+
+.App {
+  height: 100vh;
+  display: flex;
+}
+
+.main {
+  margin-top: auto;
+  margin-bottom: auto;
+}
+
+input[type="file"] {
+  color: #fff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+canvas {
+  border: 1px red solid;
+  position: absolute;
+}
+
+.canvasWrapper {
+  position: relative;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.canvasWrapper,
+canvas {
+  width: 100%;
+  height: 200px;
+}
+
+.info {
+  margin-top: 10px;
+  color: #fff;
+}
+
+#frame-keeping,
+#frame-drawing {
+  opacity: 0.5;
+}
+
+#audio {
+  display: none;
+}
+
+.deleteBtn {
+  margin-left: auto;
+}
+
+.frames {
+  width: 100%;
+  height: 100%;
+  display: flex;
+}
+
+.frame {
+  height: 100%;
+  border: 3px dashed lightblue;
+  position: absolute;
+}
+.frame.selected {
+  border: 5x dashed gold;
+}
