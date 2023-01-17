@@ -74,6 +74,7 @@ canvas {
 .frame {
   height: 100%;
   border: 3px dashed lightblue;
+  border-radius: 15px;
   position: absolute;
 }
 .frame.selected {

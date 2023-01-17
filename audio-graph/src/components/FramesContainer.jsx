@@ -19,33 +19,53 @@ export const FramesContainer = ({ canDraw, canDelete }) => {
 
   const handleWaveFormMouseDown = (e) => {
     if (canDraw) {
-      setIsMouseDown(true);
       const waveformCanvas = document.getElementById("waveform");
-      setStartDrawingPosition(utils.getMousePosition(e, waveformCanvas));
-      const framesCopy = [...frames];
-      framesCopy.push({
-        start: 0,
-        end: 0,
-        id: frames.length,
-        selected: false,
-      });
-      setFrames(framesCopy);
+      const startPosition = utils.getMousePosition(e, waveformCanvas);
+      // we want to start drawing only if the click happened outside the frame
+      if (!isWithinFrame(startPosition, frames)) {
+        setIsMouseDown(true);
+        setStartDrawingPosition(startPosition);
+        const framesCopy = [...frames];
+        framesCopy.push({
+          start: 0,
+          end: 0,
+          id: frames.length,
+          selected: false,
+        });
+        setFrames(framesCopy);
+      }
     }
   };
   const handleWaveformMousMove = (event) => {
     if (canDraw) {
       if (isMouseDown) {
+        const [maxLeftEnd, maxRightEnd] = getMaximalEndingPosition(
+          startDrawingPosition,
+          // only take the frames without the one being drawn now. (last one)
+          frames.filter((f) => f.id !== frames[frames.length - 1].id)
+        );
+        console.log("max left, maxRight", maxLeftEnd, maxRightEnd);
+
         const waveformCanvas = document.getElementById("waveform");
+        const endPosition = utils.getMousePosition(event, waveformCanvas);
+        const correctedEndPosition =
+          endPosition < maxLeftEnd
+            ? maxLeftEnd
+            : endPosition > maxRightEnd
+            ? maxRightEnd
+            : endPosition;
+
         const framesCopy = [...frames];
         const lastFrame = framesCopy[framesCopy.length - 1];
         lastFrame.start = startDrawingPosition;
-        lastFrame.end = utils.getMousePosition(event, waveformCanvas);
-        setFrames(framesCopy);
+        lastFrame.end = correctedEndPosition;
+        if (lastFrame.start) setFrames(framesCopy);
       }
     }
   };
   const handleOnMouseUp = (e) => {
     setIsMouseDown(false);
+    console.log(frames);
   };
 
   const deleteFrame = (id) => {
@@ -66,6 +86,7 @@ export const FramesContainer = ({ canDraw, canDelete }) => {
       {frames.map(({ start, end, id, selected }) => {
         return (
           <div
+            key={id}
             className={"frame" + (selected ? " selected" : "")}
             onClick={
               canDelete
@@ -86,4 +107,37 @@ export const FramesContainer = ({ canDraw, canDelete }) => {
       })}
     </div>
   );
+};
+
+const isWithinFrame = (position, frames) => {
+  for (let i = 0; i < frames.length; i++) {
+    if (position >= frames[i].start && position <= frames[i].end) {
+      return true;
+    }
+  }
+  return false;
+};
+
+// given a frame start point, get maximal position on where the end of the frame can lay
+// so that it doesn't overlap any of the already drawn frames
+const getMaximalEndingPosition = (start, frames) => {
+  // frame edges are basically either "starts" or "ends" of each frame on the
+  // left/right of start. This is because we can't be sure whether the start or
+  // end of each frame is on the right/left -> thus we don't mind the start or
+  // ends and we just take all the "lines" (frame edges) that are on either left
+  // or right of the start point.
+  let framesEdgesOnTheLeft = [];
+  let framesEdgesOnTheRight = [];
+
+  frames.forEach((f) => {
+    if (f.start > start) framesEdgesOnTheRight.push(f.start);
+    if (f.end > start) framesEdgesOnTheRight.push(f.end);
+    if (f.start < start) framesEdgesOnTheLeft.push(f.start);
+    if (f.end < start) framesEdgesOnTheLeft.push(f.end);
+  });
+
+  const leftMax = Math.max(...framesEdgesOnTheLeft);
+  const rightMax = Math.min(...framesEdgesOnTheRight);
+
+  return [leftMax, rightMax];
 };
