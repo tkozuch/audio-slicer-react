@@ -1,20 +1,73 @@
 import "./App.css";
 import Container from "react-bootstrap/Container";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
-import * as utils from "./utilities";
 import { FramesContainer } from "./components/FramesContainer";
+import { drawAudio } from "./drawWaveform";
+
+window.AudioContext = window.AudioContext || window.webkitAudioContext;
+
+const audioContext = new AudioContext();
 
 function App() {
+  const [framesContainerState, setFramesContainerState] = useState({
+    canDraw: false,
+    canDelete: false,
+  });
+
   return (
     <div className="App">
       <Container className="main">
-        <input type="file" id="upload" />
+        <div className="upper-row">
+          <input
+            type="file"
+            id="upload"
+            onChange={(event) => drawAudio(event, audioContext)}
+          />
+
+          <button
+            id="mark-btn"
+            onClick={() => {
+              setFramesContainerState({
+                canDraw: !framesContainerState.canDraw,
+              });
+            }}
+            className={
+              framesContainerState.canDraw
+                ? "btn btn-primary"
+                : "btn btn-secondary"
+            }
+          >
+            Mark
+          </button>
+
+          <button
+            id="delete-btn"
+            onClick={() => {
+              const frames = document.getElementsByClassName("frame");
+              if (frames.length) {
+                new Array(...frames).forEach(
+                  (frame) => (frame.style.cursor = "no-drop")
+                );
+              }
+              setFramesContainerState({
+                canDelete: !framesContainerState.canDelete,
+              });
+            }}
+            className={
+              framesContainerState.canDelete
+                ? "btn btn-primary"
+                : "btn btn-secondary"
+            }
+          >
+            Delete
+          </button>
+        </div>
 
         <div className="canvasWrapper">
-          <FramesContainer></FramesContainer>
           <canvas id="waveform" width="1000" height="200"></canvas>
+          <FramesContainer {...framesContainerState}></FramesContainer>
         </div>
 
         {/* <Row className="info">
