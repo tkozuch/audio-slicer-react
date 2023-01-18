@@ -88,3 +88,8 @@ canvas {
   margin-left: auto;
   margin-right: 10px;
 }
+
+.play-btn,
+.pause-btn {
+  margin-right: 10px;
+}

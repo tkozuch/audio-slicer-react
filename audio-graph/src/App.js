@@ -1,29 +1,52 @@
 import "./App.css";
 import Container from "react-bootstrap/Container";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { FramesContainer } from "./components/FramesContainer";
-import { drawAudio } from "./drawWaveform";
+import { drawAudio } from "./utilities/drawWaveform";
 
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
 const audioContext = new AudioContext();
 
 function App() {
+  const [frames, setFrames] = useState([]);
   const [framesContainerState, setFramesContainerState] = useState({
     canDraw: false,
     canDelete: false,
   });
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  useEffect(() => {}, []);
+
+  const initializeAudioElement = (event) => {
+    var files = event.target.files;
+    document
+      .getElementById("audio")
+      .setAttribute("src", URL.createObjectURL(files[0]));
+  };
+  const play = (e) => {
+    setIsPlaying(true);
+    document.getElementById("audio").play();
+  };
+  const pause = (e) => {
+    setIsPlaying(false);
+    document.getElementById("audio").pause();
+  };
 
   return (
     <div className="App">
+      <audio id="audio" controls></audio>
       <Container className="main">
         <div className="upper-row">
           <input
             type="file"
             id="upload"
-            onChange={(event) => drawAudio(event, audioContext)}
+            onChange={(event) => {
+              initializeAudioElement(event);
+              drawAudio(event, audioContext);
+            }}
           />
 
           <button
@@ -67,36 +90,38 @@ function App() {
 
         <div className="canvasWrapper">
           <canvas id="waveform" width="1000" height="200"></canvas>
-          <FramesContainer {...framesContainerState}></FramesContainer>
+          <FramesContainer
+            {...framesContainerState}
+            frames={frames}
+            setFrames={setFrames}
+          ></FramesContainer>
         </div>
 
-        {/* <Row className="info">
-          <Col sm="2">
-            {!isPlaying ? (
-              <Button sm="2" id="playBtn" className="w-100">
-                PLAY
-              </Button>
-            ) : (
-              <Button sm="2" id="pauseBtn" className="w-100">
-                PAUSE
-              </Button>
-            )}
-          </Col>
-          <Col sm="2">
-            <Button id="stopBtn" className="w-100">
-              STOP
-            </Button>
-          </Col>
-          <Col sm="2" className="deleteBtn">
-            <Button
-              id="deleteBtn"
-              className="w-100 btn-warning"
-              disabled={!frameSelected}
+        <div className="down-buttons-wrapper">
+          {!isPlaying ? (
+            <button
+              sm="2"
+              id="playBtn"
+              className="btn btn-success play-btn"
+              onClick={play}
             >
-              DELETE
-            </Button>
-          </Col>
-        </Row> */}
+              PLAY
+            </button>
+          ) : (
+            <button
+              sm="2"
+              id="pauseBtn"
+              className="btn btn-warning pause-btn"
+              onClick={pause}
+            >
+              PAUSE
+            </button>
+          )}
+
+          <button id="stopBtn" className="btn btn-danger stop-btn">
+            STOP
+          </button>
+        </div>
       </Container>
     </div>
   );

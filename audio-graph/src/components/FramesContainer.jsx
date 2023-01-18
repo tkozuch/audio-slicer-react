@@ -1,9 +1,9 @@
 import { useState } from "react";
 
-import * as utils from "../utilities";
+import * as utils from "../utilities/utilities";
 
-export const FramesContainer = ({ canDraw, canDelete }) => {
-  const [frames, setFrames] = useState([]);
+export const FramesContainer = ({ canDraw, canDelete, frames, setFrames }) => {
+  // const [frames, setFrames] = useState([]);
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [startDrawingPosition, setStartDrawingPosition] = useState(null);
 
