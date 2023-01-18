@@ -1,14 +1,51 @@
 import "./App.css";
 import Container from "react-bootstrap/Container";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 import { FramesContainer } from "./components/FramesContainer";
 import { drawAudio } from "./utilities/drawWaveform";
+import { positionToTime } from "./utilities/utilities";
 
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
 const audioContext = new AudioContext();
+
+function useStartTimeEndTime(frames, audioElement, waveformRef) {
+  const [selectedFrame, setSelectedFrame] = useState(null);
+  const [endTime, setEndTime] = useState(null);
+  const [startTime, setStartTime] = useState(null);
+
+  useEffect(() => {
+    setSelectedFrame(frames.length ? frames.find((f) => f.selected) : null);
+  }, [frames]);
+
+  useEffect(() => {
+    setEndTime(
+      selectedFrame
+        ? positionToTime(
+            Math.max(selectedFrame.start, selectedFrame.end),
+            waveformRef.current,
+            audioElement.current.duration
+          )
+        : audioElement.current
+        ? audioElement.current.duration
+        : 0
+    );
+    setStartTime(
+      selectedFrame
+        ? positionToTime(
+            Math.min(selectedFrame.start, selectedFrame.end),
+            waveformRef.current,
+            audioElement.current.duration
+          )
+        : audioElement.current
+        ? audioElement.current.duration
+        : 0
+    );
+  }, [selectedFrame, audioElement]);
+  return [startTime, endTime];
+}
 
 function App() {
   const [frames, setFrames] = useState([]);
@@ -17,27 +54,47 @@ function App() {
     canDelete: false,
   });
   const [isPlaying, setIsPlaying] = useState(false);
+  const audioElement = useRef(null);
+  const waveformRef = useRef(null);
+  const [pauseInterval, setPauseInterval] = useState();
+  const [startTime, endTime] = useStartTimeEndTime(
+    frames,
+    audioElement,
+    waveformRef
+  );
 
-  useEffect(() => {}, []);
+  // useEffect(() => {}, []);
 
   const initializeAudioElement = (event) => {
     var files = event.target.files;
-    document
-      .getElementById("audio")
-      .setAttribute("src", URL.createObjectURL(files[0]));
+    audioElement.current.setAttribute("src", URL.createObjectURL(files[0]));
   };
   const play = (e) => {
     setIsPlaying(true);
-    document.getElementById("audio").play();
+    audioElement.current.play();
+
+    if (startTime && endTime) {
+      audioElement.current.currentTime = startTime;
+      setPauseInterval(
+        setInterval(() => {
+          console.log("interval set");
+          if (audioElement.current.currentTime >= endTime) {
+            audioElement.current.pause();
+            clearInterval(pauseInterval);
+            setIsPlaying(false);
+            console.log("interval cleared");
+          }
+        }, 10)
+      );
+    }
   };
   const pause = (e) => {
     setIsPlaying(false);
     document.getElementById("audio").pause();
   };
-
   return (
     <div className="App">
-      <audio id="audio" controls></audio>
+      <audio id="audio" controls ref={audioElement}></audio>
       <Container className="main">
         <div className="upper-row">
           <input
@@ -89,7 +146,12 @@ function App() {
         </div>
 
         <div className="canvasWrapper">
-          <canvas id="waveform" width="1000" height="200"></canvas>
+          <canvas
+            id="waveform"
+            width="1000"
+            height="200"
+            ref={waveformRef}
+          ></canvas>
           <FramesContainer
             {...framesContainerState}
             frames={frames}

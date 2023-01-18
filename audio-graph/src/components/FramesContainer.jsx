@@ -9,11 +9,13 @@ export const FramesContainer = ({ canDraw, canDelete, frames, setFrames }) => {
 
   const selectFrame = (id) => {
     const framesCopy = [...frames];
-    framesCopy.forEach((frame) => {
-      frame.selected = false;
-    });
     const toSelect = framesCopy.find((frame) => frame.id === id);
-    toSelect.selected = true;
+    toSelect.selected = !toSelect.selected;
+
+    framesCopy.forEach((frame) => {
+      if (frame.id !== id) frame.selected = false;
+    });
+
     setFrames(framesCopy);
   };
 
@@ -44,7 +46,6 @@ export const FramesContainer = ({ canDraw, canDelete, frames, setFrames }) => {
           // only take the frames without the one being drawn now. (last one)
           frames.filter((f) => f.id !== frames[frames.length - 1].id)
         );
-        console.log("max left, maxRight", maxLeftEnd, maxRightEnd);
 
         const waveformCanvas = document.getElementById("waveform");
         const endPosition = utils.getMousePosition(event, waveformCanvas);
@@ -65,7 +66,6 @@ export const FramesContainer = ({ canDraw, canDelete, frames, setFrames }) => {
   };
   const handleOnMouseUp = (e) => {
     setIsMouseDown(false);
-    console.log(frames);
   };
 
   const deleteFrame = (id) => {
