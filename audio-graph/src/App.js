@@ -45,7 +45,7 @@ function useStartTimeEndTime(frames, audioElement, waveformElement) {
     );
   }, [selectedFrame, audioElement, waveformElement]);
   console.log("start time, end time", startTime, endTime);
-  return [startTime, endTime];
+  return [startTime, setStartTime, endTime];
 }
 
 function App() {
@@ -58,7 +58,7 @@ function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioElement = useRef(null);
   const waveformRef = useRef(null);
-  const [startTime, endTime] = useStartTimeEndTime(
+  const [startTime, setStartTime, endTime] = useStartTimeEndTime(
     frames,
     audioElement.current,
     waveformRef.current
@@ -69,9 +69,11 @@ function App() {
     if (isPlaying) {
       pauseInterval = setInterval(() => {
         console.log("interval set");
+        setStartTime(audioElement.current.currentTime);
         if (audioElement.current.currentTime >= endTime) {
           audioElement.current.pause();
           setIsPlaying(false);
+          setStartTime(0);
         }
       }, 10);
     }
