@@ -5,7 +5,7 @@ import { useEffect, useState, useRef } from "react";
 
 import { FramesContainer } from "./components/FramesContainer";
 import { drawAudio } from "./utilities/drawWaveform";
-import { positionToTime } from "./utilities/utilities";
+import { positionToTimePercent } from "./utilities/utilities";
 
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
@@ -23,9 +23,8 @@ function useStartTimeEndTime(frames, audioElement, waveformElement) {
   useEffect(() => {
     setEndTime(
       selectedFrame
-        ? positionToTime(
+        ? positionToTimePercent(
             Math.max(selectedFrame.start, selectedFrame.end),
-            waveformElement,
             audioElement.duration
           )
         : audioElement
@@ -34,9 +33,8 @@ function useStartTimeEndTime(frames, audioElement, waveformElement) {
     );
     setStartTime(
       selectedFrame
-        ? positionToTime(
+        ? positionToTimePercent(
             Math.min(selectedFrame.start, selectedFrame.end),
-            waveformElement,
             audioElement.duration
           )
         : audioElement

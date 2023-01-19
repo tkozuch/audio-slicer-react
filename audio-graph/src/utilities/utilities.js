@@ -35,3 +35,7 @@ export function positionToTime(Xcoordinate, containingElement, audioDuration) {
     audioDuration
   );
 }
+
+export function positionToTimePercent(Xcoordinate, audioDuration) {
+  return (Xcoordinate / 100) * audioDuration;
+}
