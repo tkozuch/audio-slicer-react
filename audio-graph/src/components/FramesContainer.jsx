@@ -88,13 +88,7 @@ export const FramesContainer = ({ canDraw, canDelete, frames, setFrames }) => {
           <div
             key={id}
             className={"frame" + (selected ? " selected" : "")}
-            onClick={
-              canDelete
-                ? () => deleteFrame(id)
-                : canDraw
-                ? () => {}
-                : () => selectFrame(id)
-            }
+            onClick={canDelete ? () => deleteFrame(id) : () => selectFrame(id)}
             style={
               start === 0 && end === 0 // makes sure we already moved the mouse, not just clicked it. Prevents a glitch.
                 ? { display: "none" }

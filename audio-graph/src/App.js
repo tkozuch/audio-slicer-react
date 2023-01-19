@@ -30,7 +30,7 @@ function useStartTimeEndTime(frames, audioElement, waveformRef) {
           )
         : audioElement.current
         ? audioElement.current.duration
-        : 0
+        : undefined
     );
     setStartTime(
       selectedFrame
@@ -41,13 +41,14 @@ function useStartTimeEndTime(frames, audioElement, waveformRef) {
           )
         : audioElement.current
         ? audioElement.current.duration
-        : 0
+        : undefined
     );
-  }, [selectedFrame, audioElement]);
+  }, [selectedFrame, audioElement, waveformRef]);
   return [startTime, endTime];
 }
 
 function App() {
+  console.log("render start");
   const [frames, setFrames] = useState([]);
   const [framesContainerState, setFramesContainerState] = useState({
     canDraw: false,
@@ -56,42 +57,49 @@ function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioElement = useRef(null);
   const waveformRef = useRef(null);
-  const [pauseInterval, setPauseInterval] = useState();
   const [startTime, endTime] = useStartTimeEndTime(
     frames,
     audioElement,
     waveformRef
   );
 
-  // useEffect(() => {}, []);
+  useEffect(() => {
+    let pauseInterval;
+    if (isPlaying) {
+      pauseInterval = setInterval(() => {
+        console.log("interval set");
+        if (audioElement.current.currentTime >= endTime) {
+          audioElement.current.pause();
+          setIsPlaying(false);
+        }
+      }, 10);
+    }
+
+    return () => {
+      console.log("interval cleared: ", isPlaying);
+      clearInterval(pauseInterval);
+    };
+  }, [isPlaying]);
 
   const initializeAudioElement = (event) => {
     var files = event.target.files;
     audioElement.current.setAttribute("src", URL.createObjectURL(files[0]));
   };
   const play = (e) => {
+    console.log("play clicked");
     setIsPlaying(true);
-    audioElement.current.play();
-
     if (startTime && endTime) {
       audioElement.current.currentTime = startTime;
-      setPauseInterval(
-        setInterval(() => {
-          console.log("interval set");
-          if (audioElement.current.currentTime >= endTime) {
-            audioElement.current.pause();
-            clearInterval(pauseInterval);
-            setIsPlaying(false);
-            console.log("interval cleared");
-          }
-        }, 10)
-      );
+      audioElement.current.play();
     }
   };
   const pause = (e) => {
+    console.log("pause clicked");
     setIsPlaying(false);
     document.getElementById("audio").pause();
   };
+
+  console.log("render end");
   return (
     <div className="App">
       <audio id="audio" controls ref={audioElement}></audio>
