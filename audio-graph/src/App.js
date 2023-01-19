@@ -65,16 +65,16 @@ function App() {
     let pauseInterval;
     if (isPlaying) {
       pauseInterval = setInterval(() => {
-        setStartTime(audioElement.current.currentTime);
+        console.log("interval set. ", startTime, endTime);
         if (audioElement.current.currentTime >= endTime) {
           audioElement.current.pause();
           setIsPlaying(false);
-          setStartTime(0);
         }
       }, 10);
     }
 
     return () => {
+      console.log("interval UNset. ", startTime, endTime);
       clearInterval(pauseInterval);
     };
   }, [isPlaying]);
@@ -84,10 +84,10 @@ function App() {
     audioElement.current.setAttribute("src", URL.createObjectURL(files[0]));
   };
   const play = (e) => {
-    setIsPlaying(true);
     // if (startTime && endTime) {
     audioElement.current.currentTime = startTime;
     audioElement.current.play();
+    setIsPlaying(true);
     // }
   };
   const pause = (e) => {
