@@ -12,6 +12,11 @@ export function getMousePosition(event, element) {
     : event.clientX - element.getBoundingClientRect().left;
 }
 
+export function getMousePositionInPercent(event, element) {
+  const px = getMousePosition(event, element);
+  return (px / element.getBoundingClientRect().width) * 100;
+}
+
 export function timeToPosition(time, container, audioDuration) {
   // return element coordinates at which a given time is
   const width = container.getBoundingClientRect().width;

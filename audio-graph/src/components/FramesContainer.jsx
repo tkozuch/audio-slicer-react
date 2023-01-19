@@ -1,11 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import * as utils from "../utilities/utilities";
 
 export const FramesContainer = ({ canDraw, canDelete, frames, setFrames }) => {
-  // const [frames, setFrames] = useState([]);
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [startDrawingPosition, setStartDrawingPosition] = useState(null);
+  const self = useRef(null);
+
+  const deleteFrame = (id) => {
+    const framesCopy = [...frames];
+    const i = framesCopy.findIndex((frame) => frame.id === id);
+    framesCopy.splice(i, 1);
+    setFrames(framesCopy);
+  };
 
   const selectFrame = (id) => {
     const framesCopy = [...frames];
@@ -22,7 +29,8 @@ export const FramesContainer = ({ canDraw, canDelete, frames, setFrames }) => {
   const handleWaveFormMouseDown = (e) => {
     if (canDraw) {
       const waveformCanvas = document.getElementById("waveform");
-      const startPosition = utils.getMousePosition(e, waveformCanvas);
+      const startPosition = utils.getMousePositionInPercent(e, waveformCanvas);
+      console.log("start position: ", startPosition);
       // we want to start drawing only if the click happened outside the frame
       if (!isWithinFrame(startPosition, frames)) {
         setIsMouseDown(true);
@@ -48,7 +56,10 @@ export const FramesContainer = ({ canDraw, canDelete, frames, setFrames }) => {
         );
 
         const waveformCanvas = document.getElementById("waveform");
-        const endPosition = utils.getMousePosition(event, waveformCanvas);
+        const endPosition = utils.getMousePositionInPercent(
+          event,
+          waveformCanvas
+        );
         const correctedEndPosition =
           endPosition < maxLeftEnd
             ? maxLeftEnd
@@ -68,12 +79,18 @@ export const FramesContainer = ({ canDraw, canDelete, frames, setFrames }) => {
     setIsMouseDown(false);
   };
 
-  const deleteFrame = (id) => {
-    const framesCopy = [...frames];
-    const i = framesCopy.findIndex((frame) => frame.id === id);
-    framesCopy.splice(i, 1);
-    setFrames(framesCopy);
-  };
+  useEffect(() => {
+    const removeSelectedFrame = (e) => {
+      if (e.key === "Delete") {
+        const selectedFrame = frames.find((f) => f.selected);
+        if (selectedFrame) deleteFrame(selectedFrame.id);
+      }
+    };
+    document.addEventListener("keydown", removeSelectedFrame);
+    return () => {
+      document.removeEventListener("keydown", removeSelectedFrame);
+    };
+  }, [frames]);
 
   return (
     <div
@@ -82,6 +99,7 @@ export const FramesContainer = ({ canDraw, canDelete, frames, setFrames }) => {
       onMouseDown={handleWaveFormMouseDown}
       onMouseMove={handleWaveformMousMove}
       onMouseUp={handleOnMouseUp}
+      ref={self}
     >
       {frames.map(({ start, end, id, selected }) => {
         return (
@@ -93,8 +111,8 @@ export const FramesContainer = ({ canDraw, canDelete, frames, setFrames }) => {
               start === 0 && end === 0 // makes sure we already moved the mouse, not just clicked it. Prevents a glitch.
                 ? { display: "none" }
                 : end > start
-                ? { left: start, width: end - start }
-                : { left: end, width: start - end }
+                ? { left: start + "%", width: end - start + "%" }
+                : { left: end + "%", width: start - end + "%" }
             }
           ></div>
         );

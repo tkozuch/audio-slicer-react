@@ -44,7 +44,6 @@ function useStartTimeEndTime(frames, audioElement, waveformElement) {
         : undefined
     );
   }, [selectedFrame, audioElement, waveformElement]);
-  console.log("start time, end time", startTime, endTime);
   return [startTime, setStartTime, endTime];
 }
 
@@ -68,7 +67,6 @@ function App() {
     let pauseInterval;
     if (isPlaying) {
       pauseInterval = setInterval(() => {
-        console.log("interval set");
         setStartTime(audioElement.current.currentTime);
         if (audioElement.current.currentTime >= endTime) {
           audioElement.current.pause();
@@ -79,7 +77,6 @@ function App() {
     }
 
     return () => {
-      console.log("interval cleared: ", isPlaying);
       clearInterval(pauseInterval);
     };
   }, [isPlaying]);
@@ -89,7 +86,6 @@ function App() {
     audioElement.current.setAttribute("src", URL.createObjectURL(files[0]));
   };
   const play = (e) => {
-    console.log("play clicked");
     setIsPlaying(true);
     // if (startTime && endTime) {
     audioElement.current.currentTime = startTime;
@@ -97,9 +93,12 @@ function App() {
     // }
   };
   const pause = (e) => {
-    console.log("pause clicked");
     setIsPlaying(false);
     document.getElementById("audio").pause();
+  };
+  const stop = (e) => {
+    setIsPlaying(false);
+    if (audioElement.current.currentTime) audioElement.current.currentTime = 0;
   };
 
   console.log("render end");
@@ -191,7 +190,13 @@ function App() {
             </button>
           )}
 
-          <button id="stopBtn" className="btn btn-danger stop-btn">
+          <button
+            id="stopBtn"
+            className="btn btn-danger stop-btn"
+            onClick={() => {
+              stop();
+            }}
+          >
             STOP
           </button>
         </div>
