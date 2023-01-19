@@ -26,6 +26,14 @@ export const FramesContainer = ({ canDraw, canDelete, frames, setFrames }) => {
     setFrames(framesCopy);
   };
 
+  const deselectAllFrames = () => {
+    if (!canDelete) {
+      const framesCopy = [...frames];
+      framesCopy.forEach((f) => (f.selected = false));
+      setFrames(framesCopy);
+    }
+  };
+
   const handleWaveFormMouseDown = (e) => {
     if (canDraw) {
       const waveformCanvas = document.getElementById("waveform");
@@ -100,6 +108,7 @@ export const FramesContainer = ({ canDraw, canDelete, frames, setFrames }) => {
       onMouseMove={handleWaveformMousMove}
       onMouseUp={handleOnMouseUp}
       ref={self}
+      onClick={deselectAllFrames}
     >
       {frames.map(({ start, end, id, selected }) => {
         return (

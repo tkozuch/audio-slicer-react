@@ -79,6 +79,15 @@ function App() {
     };
   }, [isPlaying]);
 
+  useEffect(() => {
+    const frames = document.getElementsByClassName("frame");
+    const cursor = framesContainerState.canDelete ? "no-drop" : "unset";
+
+    if (frames.length) {
+      new Array(...frames).forEach((frame) => (frame.style.cursor = cursor));
+    }
+  }, [framesContainerState]);
+
   const initializeAudioElement = (event) => {
     var files = event.target.files;
     audioElement.current.setAttribute("src", URL.createObjectURL(files[0]));
@@ -133,12 +142,6 @@ function App() {
           <button
             id="delete-btn"
             onClick={() => {
-              const frames = document.getElementsByClassName("frame");
-              if (frames.length) {
-                new Array(...frames).forEach(
-                  (frame) => (frame.style.cursor = "no-drop")
-                );
-              }
               setFramesContainerState({
                 canDelete: !framesContainerState.canDelete,
               });
