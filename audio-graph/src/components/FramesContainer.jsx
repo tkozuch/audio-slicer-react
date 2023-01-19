@@ -26,7 +26,7 @@ export const FramesContainer = ({ canDraw, canDelete, frames, setFrames }) => {
     setFrames(framesCopy);
   };
 
-  const deselectAllFrames = () => {
+  const deselectAllFrames = (e) => {
     if (!canDelete) {
       const framesCopy = [...frames];
       framesCopy.forEach((f) => (f.selected = false));
@@ -86,6 +86,17 @@ export const FramesContainer = ({ canDraw, canDelete, frames, setFrames }) => {
   const handleOnMouseUp = (e) => {
     setIsMouseDown(false);
   };
+  const handleContainerClick = (e) => {
+    const frame = isWithinFrame(
+      utils.getMousePositionInPercent(e, self.current),
+      frames
+    );
+    if (frame) {
+      selectFrame(frame.id);
+    } else {
+      deselectAllFrames();
+    }
+  };
 
   useEffect(() => {
     const removeSelectedFrame = (e) => {
@@ -108,14 +119,13 @@ export const FramesContainer = ({ canDraw, canDelete, frames, setFrames }) => {
       onMouseMove={handleWaveformMousMove}
       onMouseUp={handleOnMouseUp}
       ref={self}
-      onClick={deselectAllFrames}
+      onClick={handleContainerClick}
     >
       {frames.map(({ start, end, id, selected }) => {
         return (
           <div
             key={id}
             className={"frame" + (selected ? " selected" : "")}
-            onClick={canDelete ? () => deleteFrame(id) : () => selectFrame(id)}
             style={
               start === 0 && end === 0 // makes sure we already moved the mouse, not just clicked it. Prevents a glitch.
                 ? { display: "none" }
@@ -133,7 +143,7 @@ export const FramesContainer = ({ canDraw, canDelete, frames, setFrames }) => {
 const isWithinFrame = (position, frames) => {
   for (let i = 0; i < frames.length; i++) {
     if (position >= frames[i].start && position <= frames[i].end) {
-      return true;
+      return frames[i];
     }
   }
   return false;

@@ -49,7 +49,7 @@ function App() {
   console.log("render start");
   const [frames, setFrames] = useState([]);
   const [framesContainerState, setFramesContainerState] = useState({
-    canDraw: false,
+    canDraw: true,
     canDelete: false,
   });
   const [isPlaying, setIsPlaying] = useState(false);
