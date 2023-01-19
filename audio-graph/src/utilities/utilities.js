@@ -19,6 +19,12 @@ export function timeToPosition(time, container, audioDuration) {
 }
 
 export function positionToTime(Xcoordinate, containingElement, audioDuration) {
+  console.log(
+    "x con, el1, duration: ",
+    Xcoordinate,
+    containingElement,
+    audioDuration
+  );
   return (
     (Xcoordinate / containingElement.getBoundingClientRect().width) *
     audioDuration

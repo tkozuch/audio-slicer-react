@@ -11,7 +11,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
 const audioContext = new AudioContext();
 
-function useStartTimeEndTime(frames, audioElement, waveformRef) {
+function useStartTimeEndTime(frames, audioElement, waveformElement) {
   const [selectedFrame, setSelectedFrame] = useState(null);
   const [endTime, setEndTime] = useState(null);
   const [startTime, setStartTime] = useState(null);
@@ -25,25 +25,26 @@ function useStartTimeEndTime(frames, audioElement, waveformRef) {
       selectedFrame
         ? positionToTime(
             Math.max(selectedFrame.start, selectedFrame.end),
-            waveformRef.current,
-            audioElement.current.duration
+            waveformElement,
+            audioElement.duration
           )
-        : audioElement.current
-        ? audioElement.current.duration
+        : audioElement
+        ? audioElement.duration
         : undefined
     );
     setStartTime(
       selectedFrame
         ? positionToTime(
             Math.min(selectedFrame.start, selectedFrame.end),
-            waveformRef.current,
-            audioElement.current.duration
+            waveformElement,
+            audioElement.duration
           )
-        : audioElement.current
-        ? audioElement.current.duration
+        : audioElement
+        ? 0
         : undefined
     );
-  }, [selectedFrame, audioElement, waveformRef]);
+  }, [selectedFrame, audioElement, waveformElement]);
+  console.log("start time, end time", startTime, endTime);
   return [startTime, endTime];
 }
 
@@ -59,8 +60,8 @@ function App() {
   const waveformRef = useRef(null);
   const [startTime, endTime] = useStartTimeEndTime(
     frames,
-    audioElement,
-    waveformRef
+    audioElement.current,
+    waveformRef.current
   );
 
   useEffect(() => {
@@ -88,10 +89,10 @@ function App() {
   const play = (e) => {
     console.log("play clicked");
     setIsPlaying(true);
-    if (startTime && endTime) {
-      audioElement.current.currentTime = startTime;
-      audioElement.current.play();
-    }
+    // if (startTime && endTime) {
+    audioElement.current.currentTime = startTime;
+    audioElement.current.play();
+    // }
   };
   const pause = (e) => {
     console.log("pause clicked");
