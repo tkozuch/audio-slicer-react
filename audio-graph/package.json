@@ -16,10 +16,9 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
     "test": "npx cypress run ./cypress test.cy.js --record=false",
-    "test-headed": "npx cypress run ./cypress test.cy.js --record=false --headed"
+    "eject": "react-scripts eject",
+    "test-headed": "npx cypress run ./cypress test.cy.js --record=false --headed --no-exit"
   },
   "eslintConfig": {
     "extends": [
@@ -38,5 +37,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "cypress-slow-down": "^1.2.1"
   }
 }

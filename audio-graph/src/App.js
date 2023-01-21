@@ -169,7 +169,7 @@ function App() {
             setFrames={setFrames}
           ></FramesContainer>
         </div>
-
+{/*  */}
         <div className="down-buttons-wrapper">
           {!isPlaying ? (
             <button

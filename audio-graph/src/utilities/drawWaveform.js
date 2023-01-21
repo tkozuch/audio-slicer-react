@@ -1,4 +1,3 @@
-
 export const drawAudio = (event, audioContext) => {
   var files = event.target.files;
   files[0].arrayBuffer().then((arrayBuffer) => {
