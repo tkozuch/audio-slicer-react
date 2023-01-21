@@ -7,7 +7,7 @@ export const drawAudio = (event, audioContext) => {
   });
 };
 /**
- * Filters the AudioBuffer retrieved from an external source
+ * Filterss the AudioBuffer retrieved from an external source
  * @param {AudioBuffer} audioBuffer the AudioBuffer from drawAudio()
  * @returns {Array} an array of floating point numbers
  */
