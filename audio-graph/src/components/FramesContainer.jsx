@@ -15,6 +15,7 @@ export const FramesContainer = ({ canDraw, canDelete, frames, setFrames }) => {
   };
 
   const selectFrame = (id) => {
+    console.log("selecting frame");
     const framesCopy = [...frames];
     const toSelect = framesCopy.find((frame) => frame.id === id);
     toSelect.selected = !toSelect.selected;
@@ -23,6 +24,7 @@ export const FramesContainer = ({ canDraw, canDelete, frames, setFrames }) => {
       if (frame.id !== id) frame.selected = false;
     });
 
+    console.log("frame selected: ", framesCopy);
     setFrames(framesCopy);
   };
 
@@ -87,13 +89,12 @@ export const FramesContainer = ({ canDraw, canDelete, frames, setFrames }) => {
     setIsMouseDown(false);
   };
   const handleContainerClick = (e) => {
+    console.log("handling container click");
     const frame = isWithinFrame(
       utils.getMousePositionInPercent(e, self.current),
       frames
     );
-    if (frame) {
-      selectFrame(frame.id);
-    } else {
+    if (!frame) {
       deselectAllFrames();
     }
   };
@@ -126,6 +127,10 @@ export const FramesContainer = ({ canDraw, canDelete, frames, setFrames }) => {
           <div
             key={id}
             className={"frame" + (selected ? " selected" : "")}
+            onClick={() => {
+              console.log("frame clicked, id: ", id);
+              selectFrame(id);
+            }}
             style={
               start === 0 && end === 0 // makes sure we already moved the mouse, not just clicked it. Prevents a glitch.
                 ? { display: "none" }
@@ -142,7 +147,10 @@ export const FramesContainer = ({ canDraw, canDelete, frames, setFrames }) => {
 
 const isWithinFrame = (position, frames) => {
   for (let i = 0; i < frames.length; i++) {
-    if (position >= frames[i].start && position <= frames[i].end) {
+    if (
+      (position >= frames[i].start && position <= frames[i].end) ||
+      (position <= frames[i].start && position >= frames[i].end)
+    ) {
       return frames[i];
     }
   }

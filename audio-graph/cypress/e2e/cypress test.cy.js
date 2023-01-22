@@ -34,6 +34,7 @@ describe("cypress test", () => {
     cy.get("#framesContainer").trigger("mousedown", 700, 30); // this tests we can draw also from left to right
     cy.get("#framesContainer").trigger("mousemove", 600, 50);
     cy.get("#framesContainer").trigger("mouseup");
+    cy.get(".frame:nth-child(2)").should("not.have.class", "selected"); // assert the frames is NOT automatically selected after being drawn, this is for a nicer UX
 
     // Draw third frame
     cy.get("#framesContainer").trigger("mousedown", 450, 30); //start between frame 1 and 2
@@ -57,12 +58,13 @@ describe("cypress test", () => {
     cy.get(".frame:nth-child(2)").should("not.have.class", "selected");
     cy.get(".frame:nth-child(3)").should("not.have.class", "selected");
 
+    // cy.pause();
     // Test clicking on a frame selects it
-    // cy.get(".frame:nth-child(2)").click();
-    // cy.get(".frame:nth-child(2)").should("have.class", "selected");
-    // cy.get(".frame:nth-child(3)").click();
-    // cy.get(".frame:nth-child(3)").should("have.class", "selected");
-    // cy.get(".frame:nth-child(2)").should("not.have.class", "selected");
+    cy.get(".frame:nth-child(2)").click();
+    cy.get(".frame:nth-child(2)").should("have.class", "selected");
+    cy.get(".frame:nth-child(3)").click();
+    cy.get(".frame:nth-child(3)").should("have.class", "selected");
+    cy.get(".frame:nth-child(2)").should("not.have.class", "selected");
   });
 });
 //# recorderSourceMap=BCCECGCICKCMCOCQCSCUCWCYCaCcCeCgBCiBCkBCmBCoBCqBCsBCuBAuBAuBAuBAuBCwBCyBC0BC2BC4BC6BC8BC+BCgCCiCCkCCmCCoCCqCCsCCuCCwCC
