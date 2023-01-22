@@ -29,6 +29,12 @@ describe("cypress test", () => {
     cy.get("#framesContainer").trigger("mousedown", 15, 30);
     cy.get("#framesContainer").trigger("mousemove", 300, 50);
     cy.get("#framesContainer").trigger("mouseup");
+    cy.get("#framesContainer > *").should("have.length", 1); // assert frame was drawn
+    // Draw first frame
+    cy.get("#framesContainer").trigger("mousedown", 80, 30);
+    cy.get("#framesContainer").trigger("mousemove", 320, 50);
+    cy.get("#framesContainer").trigger("mouseup");
+    cy.get("#framesContainer > *").should("have.length", 1); // assert frame is not  drawn when started drawing from another frame.
 
     // Draw second frame
     cy.get("#framesContainer").trigger("mousedown", 700, 30); // this tests we can draw also from left to right
@@ -66,5 +72,29 @@ describe("cypress test", () => {
     cy.get(".frame:nth-child(3)").should("have.class", "selected");
     cy.get(".frame:nth-child(2)").should("not.have.class", "selected");
   });
+  // it("should be able to play", () => {
+  //   cy.viewport(1338, 977);
+
+  //   cy.visit("http://localhost:3000/");
+
+  //   cy.get("#upload").click();
+
+  //   cy.get("#upload").selectFile(".\\audio test.wav");
+
+  //   // Draw first frame
+  //   cy.get("#framesContainer").trigger("mousedown", 15, 30);
+  //   cy.get("#framesContainer").trigger("mousemove", 300, 50);
+  //   cy.get("#framesContainer").trigger("mouseup");
+  //   // Draw second frame
+  //   cy.get("#framesContainer").trigger("mousedown", 700, 30);
+  //   cy.get("#framesContainer").trigger("mousemove", 600, 50);
+  //   cy.get("#framesContainer").trigger("mouseup");
+  //   // Draw third frame
+  //   cy.get("#framesContainer").trigger("mousedown", 450, 30);
+  //   cy.get("#framesContainer").trigger("mousemove", 700, 50);
+  //   cy.get("#framesContainer").trigger("mouseup");
+
+
+  // });
 });
 //# recorderSourceMap=BCCECGCICKCMCOCQCSCUCWCYCaCcCeCgBCiBCkBCmBCoBCqBCsBCuBAuBAuBAuBAuBCwBCyBC0BC2BC4BC6BC8BC+BCgCCiCCkCCmCCoCCqCCsCCuCCwCC

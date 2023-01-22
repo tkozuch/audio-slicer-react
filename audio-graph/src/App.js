@@ -66,9 +66,11 @@ function App() {
     if (isPlaying) {
       pauseInterval = setInterval(() => {
         console.log("interval set. ", startTime, endTime);
+        setStartTime(audioElement.current.currentTime);
         if (audioElement.current.currentTime >= endTime) {
           audioElement.current.pause();
           setIsPlaying(false);
+          setStartTime(0);
         }
       }, 10);
     }
@@ -169,7 +171,7 @@ function App() {
             setFrames={setFrames}
           ></FramesContainer>
         </div>
-{/*  */}
+        {/*  */}
         <div className="down-buttons-wrapper">
           {!isPlaying ? (
             <button
