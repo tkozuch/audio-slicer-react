@@ -74,7 +74,7 @@ function App() {
           selectedFrame
             ? setStartTime(
                 positionToTimePercent(
-                  selectedFrame.start,
+                  Math.min(selectedFrame.start, selectedFrame.end),
                   audioElement.current.duration
                 )
               )
