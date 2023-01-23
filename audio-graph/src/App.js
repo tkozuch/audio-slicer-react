@@ -60,6 +60,7 @@ function App() {
     audioElement.current,
     waveformRef.current
   );
+  const selectedFrame = frames.find((f) => f.selected);
 
   useEffect(() => {
     let pauseInterval;
@@ -70,7 +71,14 @@ function App() {
         if (audioElement.current.currentTime >= endTime) {
           audioElement.current.pause();
           setIsPlaying(false);
-          setStartTime(0);
+          selectedFrame
+            ? setStartTime(
+                positionToTimePercent(
+                  selectedFrame.start,
+                  audioElement.current.duration
+                )
+              )
+            : setStartTime(0);
         }
       }, 10);
     }

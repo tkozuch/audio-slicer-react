@@ -81,6 +81,8 @@ export const FramesContainer = ({ canDraw, canDelete, frames, setFrames }) => {
         const lastFrame = framesCopy[framesCopy.length - 1];
         lastFrame.start = startDrawingPosition;
         lastFrame.end = correctedEndPosition;
+        // lastFrame.start = Math.min(startDrawingPosition, correctedEndPosition);
+        // lastFrame.end = Math.max(startDrawingPosition, correctedEndPosition);
         if (lastFrame.start) setFrames(framesCopy);
       }
     }
