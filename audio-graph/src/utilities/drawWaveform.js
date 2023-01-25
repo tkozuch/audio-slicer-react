@@ -13,7 +13,7 @@ export const drawAudio = (event, audioContext) => {
  */
 const filterData = (audioBuffer) => {
   const rawData = audioBuffer.getChannelData(0); // We only need to work with one channel of data
-  const samples = 500; // Number of samples we want to have in our final data set
+  const samples = 10000; // Number of samples we want to have in our final data set
   const blockSize = Math.floor(rawData.length / samples); // the number of samples in each subdivision
   const filteredData = [];
   for (let i = 0; i < samples; i++) {
@@ -33,7 +33,7 @@ const filterData = (audioBuffer) => {
  */
 const normalizeData = (filteredData) => {
   let multiplier = Math.pow(Math.max(...filteredData), -1);
-  return filteredData.map((n) => Math.pow(n * multiplier, 2));
+  return filteredData.map((n) => Math.pow(n * multiplier, 1));
 };
 
 /**
@@ -42,10 +42,12 @@ const normalizeData = (filteredData) => {
  * @returns {Array} a normalized array of data
  */
 const draw = (normalizedData) => {
+  console.log("normalized data", normalizedData);
+
   // set up the canvas
   const canvas = document.querySelector("#waveform");
   const dpr = 1; //window.devicePixelRatio || 1;
-  const padding = 0;
+  const padding = 30;
 
   const border = getComputedStyle(canvas)
     .getPropertyValue("border-width")
@@ -65,9 +67,10 @@ const draw = (normalizedData) => {
     let height = normalizedData[i] * canvas.offsetHeight - padding;
     if (height < 0) {
       height = 0;
-    } else if (height > canvas.offsetHeight / 2) {
-      height = canvas.offsetHeight / 2;
     }
+    // else if (height > canvas.offsetHeight * 0.9) {
+    //   height = canvas.offsetHeight * 0.9;
+    // }
     drawLineSegment(ctx, x, height, width, (i + 1) % 2);
   }
 };
@@ -83,7 +86,7 @@ const draw = (normalizedData) => {
 const drawLineSegment = (ctx, x, height, width, isEven) => {
   ctx.lineWidth = 1; // how thick the line is
   ctx.fillStyle = "#fff"; // what color our line is
-  let heightAdjusted = height > 3 ? height : 3; // This is for purpose of not having a visible breaks in the waveform (caused by too small rectangle). (height might be actually bigger then 1 here)
+  let heightAdjusted = height > 1 ? height : 1; // This is for purpose of not having a visible breaks in the waveform (caused by too small rectangle). (height might be actually bigger then 1 here)
   ctx.beginPath();
   ctx.moveTo(x, 0);
   ctx.fillRect(x, -heightAdjusted, width, 2 * heightAdjusted);
