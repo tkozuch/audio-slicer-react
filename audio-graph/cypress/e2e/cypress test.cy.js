@@ -24,6 +24,15 @@ describe("cypress test", () => {
     // cy.pause();
 
     // cy.get("#mark-btn").to.have.class("selected");
+    console.log(
+      "cy get",
+      cy.get("audio"),
+      "attr: ",
+      cy.get("audio").invoke("attr", "duration")
+    );
+    // cy.get("audio").its("duration").should("eq", 3.25);
+    // cy.get("audio").invoke("attr", "duration").should("eq", 3.25);
+    cy.wait(100); // wait until the audio is loaded otherwise it won't work
 
     // Draw first frame
     cy.get("#framesContainer").trigger("mousedown", 15, 30);
@@ -93,7 +102,6 @@ describe("cypress test", () => {
   //   cy.get("#framesContainer").trigger("mousedown", 450, 30);
   //   cy.get("#framesContainer").trigger("mousemove", 700, 50);
   //   cy.get("#framesContainer").trigger("mouseup");
-
 
   // });
 });

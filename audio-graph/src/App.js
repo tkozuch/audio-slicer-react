@@ -11,14 +11,11 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
 const audioContext = new AudioContext();
 
-function useStartTimeEndTime(frames, audioElement, waveformElement) {
-  const [selectedFrame, setSelectedFrame] = useState(null);
+function useStartTimeEndTime(frames, audioElement) {
   const [endTime, setEndTime] = useState(null);
   const [startTime, setStartTime] = useState(null);
 
-  useEffect(() => {
-    setSelectedFrame(frames.length ? frames.find((f) => f.selected) : null);
-  }, [frames]);
+  const selectedFrame = frames.length ? frames.find((f) => f.selected) : null;
 
   useEffect(() => {
     setEndTime(
@@ -41,8 +38,9 @@ function useStartTimeEndTime(frames, audioElement, waveformElement) {
         ? 0
         : undefined
     );
-  }, [selectedFrame, audioElement, waveformElement]);
-  return [startTime, setStartTime, endTime];
+  }, [selectedFrame, audioElement]);
+
+  return [startTime, setStartTime, endTime, setEndTime];
 }
 
 function App() {
@@ -54,11 +52,11 @@ function App() {
   });
   const [isPlaying, setIsPlaying] = useState(false);
   const audioElement = useRef(null);
+  const [audioSource, setAudioSource] = useState(null);
   const waveformRef = useRef(null);
-  const [startTime, setStartTime, endTime] = useStartTimeEndTime(
+  const [startTime, setStartTime, endTime, setEndTime] = useStartTimeEndTime(
     frames,
-    audioElement.current,
-    waveformRef.current
+    audioElement.current
   );
   const selectedFrame = frames.find((f) => f.selected);
 
@@ -66,7 +64,7 @@ function App() {
     let pauseInterval;
     if (isPlaying) {
       pauseInterval = setInterval(() => {
-        console.log("interval set. ", startTime, endTime);
+        // console.log("interval set. ", startTime, endTime);
         setStartTime(audioElement.current.currentTime);
         if (audioElement.current.currentTime >= endTime) {
           audioElement.current.pause();
@@ -99,9 +97,25 @@ function App() {
   }, [framesContainerState]);
 
   const initializeAudioElement = (event) => {
+    console.log("initializing audio element");
     var files = event.target.files;
-    audioElement.current.setAttribute("src", URL.createObjectURL(files[0]));
+    setAudioSource(URL.createObjectURL(files[0]));
+    console.log("audioSource set");
   };
+  useEffect(() => {
+    const current = audioElement.current;
+    const handleDurationChange = () => {
+      setStartTime(0);
+      setEndTime(current.duration);
+      setFrames([]);
+    };
+    if (current) {
+      current.addEventListener("durationchange", handleDurationChange);
+    }
+    return () => {
+      current.removeEventListener("durationchange", handleDurationChange);
+    };
+  }, [audioSource, setStartTime, setEndTime]);
   const play = (e) => {
     // if (startTime && endTime) {
     audioElement.current.currentTime = startTime;
@@ -121,7 +135,13 @@ function App() {
   console.log("render end");
   return (
     <div className="App">
-      <audio id="audio" controls ref={audioElement}></audio>
+      <audio
+        id="audio"
+        controls
+        ref={audioElement}
+        src={audioSource}
+        // onLoad={(e) => handleAudioLoad(e)}
+      ></audio>
       <Container className="main">
         <div className="upper-row">
           <input
@@ -177,8 +197,10 @@ function App() {
             {...framesContainerState}
             frames={frames}
             setFrames={setFrames}
+            audioElement={audioElement}
           ></FramesContainer>
         </div>
+
         {/*  */}
         <div className="down-buttons-wrapper">
           {!isPlaying ? (
