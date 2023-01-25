@@ -7,7 +7,7 @@ export const FramesContainer = ({
   canDelete,
   frames,
   setFrames,
-  currentTime,
+  setStartTime,
   audioElement,
 }) => {
   const [isMouseDown, setIsMouseDown] = useState(false);
@@ -98,10 +98,11 @@ export const FramesContainer = ({
     setIsMouseDown(false);
   };
   const handleContainerClick = (e) => {
-    const frame = isWithinFrame(
-      utils.getMousePositionInPercent(e, self.current),
-      frames
+    const mousePosition = utils.getMousePositionInPercent(e, self.current);
+    setStartTime(
+      utils.positionToTimePercent(mousePosition, audioElement.current.duration)
     );
+    const frame = isWithinFrame(mousePosition, frames);
     if (!frame) {
       deselectAllFrames();
     }

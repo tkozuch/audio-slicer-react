@@ -198,8 +198,8 @@ function App() {
             {...framesContainerState}
             frames={frames}
             setFrames={setFrames}
+            setStartTime={setStartTime}
             audioElement={audioElement}
-            currentTime={startTime}
           ></FramesContainer>
         </div>
 
