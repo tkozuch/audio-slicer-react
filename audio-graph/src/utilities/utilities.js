@@ -23,6 +23,10 @@ export function timeToPosition(time, container, audioDuration) {
   return (time / audioDuration) * width;
 }
 
+export function timeToPositionPercent(time, audioDuration) {
+  return (time / audioDuration) * 100;
+}
+
 export function positionToTime(Xcoordinate, containingElement, audioDuration) {
   console.log(
     "x con, el1, duration: ",

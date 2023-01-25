@@ -13,7 +13,6 @@ export const FramesContainer = ({
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [startDrawingPosition, setStartDrawingPosition] = useState(null);
   const self = useRef(null);
-  const playBar = useRef(null);
 
   const deleteFrame = (id) => {
     const framesCopy = [...frames];
@@ -121,29 +120,6 @@ export const FramesContainer = ({
     };
   }, [frames]);
 
-  useEffect(() => {
-    let request;
-    console.log("current time", currentTime);
-    (function drawMovingPlayBar() {
-      if (playBar.current && audioElement.current) {
-        playBar.current.style.left =
-          utils.timeToPositionPercent(
-            currentTime,
-            audioElement.current.duration
-          ) + "%";
-      }
-      if (!audioElement.current.paused) {
-        request = requestAnimationFrame(() => {
-          drawMovingPlayBar();
-        });
-      }
-    })();
-
-    return () => {
-      cancelAnimationFrame(request);
-    };
-  }, [currentTime, audioElement]);
-
   return (
     <div
       id="framesContainer"
@@ -154,10 +130,6 @@ export const FramesContainer = ({
       ref={self}
       onClick={handleContainerClick}
     >
-      <div
-        className="play-bar__bar"
-        ref={playBar}
-      ></div>
       {frames.map(({ start, end, id, selected }) => {
         return (
           <div

@@ -6,6 +6,7 @@ import { useEffect, useState, useRef } from "react";
 import { FramesContainer } from "./components/FramesContainer";
 import { drawAudio } from "./utilities/drawWaveform";
 import { positionToTimePercent } from "./utilities/utilities";
+import { PlayBar } from "./components/PlayBar";
 
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
@@ -44,7 +45,7 @@ function useStartTimeEndTime(frames, audioElement) {
 }
 
 function App() {
-  console.log("render start");
+  // console.log("render start");
   const [frames, setFrames] = useState([]);
   const [framesContainerState, setFramesContainerState] = useState({
     canDraw: true,
@@ -132,7 +133,7 @@ function App() {
     if (audioElement.current.currentTime) audioElement.current.currentTime = 0;
   };
 
-  console.log("render end");
+  // console.log("render end");
   return (
     <div className="App">
       <audio
@@ -198,10 +199,13 @@ function App() {
             frames={frames}
             setFrames={setFrames}
             audioElement={audioElement}
+            currentTime={startTime}
           ></FramesContainer>
         </div>
 
-        {/*  */}
+        {/* currentTime is set to StartTime, because the StartTime updates to audio element current time when playing */}
+        <PlayBar audioElement={audioElement} currentTime={startTime}></PlayBar>
+
         <div className="down-buttons-wrapper">
           {!isPlaying ? (
             <button
