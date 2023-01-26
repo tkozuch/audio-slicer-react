@@ -124,12 +124,19 @@ export const FramesContainer = ({
   const handleOnMouseUp = (e) => {
     console.log("mouse up event");
     setIsMouseDown(false);
-    const framesCopy = [...frames];
+    let framesCopy = [...frames];
     const workingFrame = framesCopy.find((f) => f.working);
     if (workingFrame) {
       workingFrame.working = false;
       setFrames(framesCopy);
     }
+    (function deleteAllTooShortFrames() {
+      // cleaning
+      framesCopy = framesCopy.filter(
+        (f) => f.end - f.start >= minimalFrameWidth
+      );
+      setFrames(framesCopy);
+    })();
   };
   const handleContainerClick = (e) => {
     console.log("click event");
@@ -168,7 +175,7 @@ export const FramesContainer = ({
       onClick={handleContainerClick}
     >
       {frames.map(({ start, end, id, selected }) => {
-        return end - start > minimalFrameWidth ? (
+        return (
           <div
             key={id}
             className={"frame" + (selected ? " selected" : "")}
@@ -178,8 +185,6 @@ export const FramesContainer = ({
             }}
             style={{ left: start + "%", width: end - start + "%" }}
           ></div>
-        ) : (
-          ""
         );
       })}
     </div>
