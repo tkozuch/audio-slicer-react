@@ -15,6 +15,7 @@ export const FramesContainer = ({
   const [startDrawingPosition, setStartDrawingPosition] = useState(null);
   const self = useRef(null);
   const minimalFrameWidth = 1; // in percent
+  const [disableClick, setDisableClick] = useState(false);
 
   const deleteFrame = (id) => {
     console.log("delete frame event");
@@ -48,6 +49,7 @@ export const FramesContainer = ({
   };
 
   const handleWaveFormMouseDown = (e) => {
+    setDisableClick(false);
     console.log("mouse down event");
     if (canDraw) {
       const waveformCanvas = document.getElementById("waveform");
@@ -89,13 +91,13 @@ export const FramesContainer = ({
           waveformCanvas
         );
 
-        let correctedEndPosition =
+        let correctedEndPosition = // correct by max left/right end
           endPosition < maxLeftEnd
             ? maxLeftEnd
             : endPosition > maxRightEnd
             ? maxRightEnd
             : endPosition;
-        correctedEndPosition =
+        correctedEndPosition = // correct by minimal width
           Math.abs(correctedEndPosition - startDrawingPosition) >=
           minimalFrameWidth
             ? correctedEndPosition
@@ -118,6 +120,7 @@ export const FramesContainer = ({
         workingFrame.end = Math.max(startDrawingPosition, correctedEndPosition);
 
         setFrames(framesCopy);
+        setDisableClick(true);
       }
     }
   };
@@ -140,13 +143,19 @@ export const FramesContainer = ({
   };
   const handleContainerClick = (e) => {
     console.log("click event");
-    const mousePosition = utils.getMousePositionInPercent(e, self.current);
-    setStartTime(
-      utils.positionToTimePercent(mousePosition, audioElement.current.duration)
-    );
-    const frame = isWithinFrame(mousePosition, frames);
-    if (!frame) {
-      deselectAllFrames();
+
+    if (!disableClick) {
+      const mousePosition = utils.getMousePositionInPercent(e, self.current);
+      setStartTime(
+        utils.positionToTimePercent(
+          mousePosition,
+          audioElement.current.duration
+        )
+      );
+      const frame = isWithinFrame(mousePosition, frames);
+      if (!frame) {
+        deselectAllFrames();
+      }
     }
   };
 
@@ -175,7 +184,7 @@ export const FramesContainer = ({
       onClick={handleContainerClick}
     >
       {frames.map(({ start, end, id, selected }) => {
-        return (
+        return start !== 0 && end !== 0 ? (
           <div
             key={id}
             className={"frame" + (selected ? " selected" : "")}
@@ -185,6 +194,8 @@ export const FramesContainer = ({
             }}
             style={{ left: start + "%", width: end - start + "%" }}
           ></div>
+        ) : (
+          ""
         );
       })}
     </div>
