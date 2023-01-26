@@ -39,11 +39,16 @@ describe("cypress test", () => {
     cy.get("#framesContainer").trigger("mousemove", 300, 50);
     cy.get("#framesContainer").trigger("mouseup");
     cy.get("#framesContainer > *").should("have.length", 1); // assert frame was drawn
-    // Draw first frame
+    // Draw faulty frame
     cy.get("#framesContainer").trigger("mousedown", 80, 30);
     cy.get("#framesContainer").trigger("mousemove", 320, 50);
     cy.get("#framesContainer").trigger("mouseup");
-    cy.get("#framesContainer > *").should("have.length", 1); // assert frame is not  drawn when started drawing from another frame.
+    cy.get("#framesContainer > *").should("have.length", 1); // assert frame is not  drawn when started drawing from inside another frame.
+    // Draw faulty frame 2
+    cy.get("#framesContainer").trigger("mousedown", 30, 30);
+    cy.get("#framesContainer").trigger("mousemove", 35, 50); // too small width
+    cy.get("#framesContainer").trigger("mouseup");
+    cy.get("#framesContainer > *").should("have.length", 1); // assert frame is not  drawn when isn't bigger then the minimal frame width set
 
     // Draw second frame
     cy.get("#framesContainer").trigger("mousedown", 700, 30); // this tests we can draw also from left to right

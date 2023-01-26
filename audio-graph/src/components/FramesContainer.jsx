@@ -10,11 +10,14 @@ export const FramesContainer = ({
   setStartTime,
   audioElement,
 }) => {
+  console.log("render start");
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [startDrawingPosition, setStartDrawingPosition] = useState(null);
   const self = useRef(null);
+  const minimalFrameWidth = 1; // in percent
 
   const deleteFrame = (id) => {
+    console.log("delete frame event");
     const framesCopy = [...frames];
     const i = framesCopy.findIndex((frame) => frame.id === id);
     framesCopy.splice(i, 1);
@@ -22,7 +25,7 @@ export const FramesContainer = ({
   };
 
   const selectFrame = (id) => {
-    console.log("selecting frame");
+    console.log("select frame event");
     const framesCopy = [...frames];
     const toSelect = framesCopy.find((frame) => frame.id === id);
     toSelect.selected = !toSelect.selected;
@@ -36,6 +39,7 @@ export const FramesContainer = ({
   };
 
   const deselectAllFrames = (e) => {
+    console.log("deselect frames event");
     if (!canDelete) {
       const framesCopy = [...frames];
       framesCopy.forEach((f) => (f.selected = false));
@@ -44,6 +48,7 @@ export const FramesContainer = ({
   };
 
   const handleWaveFormMouseDown = (e) => {
+    console.log("mouse down event");
     if (canDraw) {
       const waveformCanvas = document.getElementById("waveform");
       const startPosition = utils.getMousePositionInPercent(e, waveformCanvas);
@@ -52,18 +57,24 @@ export const FramesContainer = ({
       if (!isWithinFrame(startPosition, frames)) {
         setIsMouseDown(true);
         setStartDrawingPosition(startPosition);
-        const framesCopy = [...frames];
-        framesCopy.push({
-          start: 0,
-          end: 0,
-          id: frames.length,
-          selected: false,
-        });
-        setFrames(framesCopy);
+
+        const workingFrame = frames.find((f) => f.working);
+        if (!workingFrame) {
+          const framesCopy = [...frames];
+          framesCopy.push({
+            start: 0,
+            end: 0,
+            selected: false,
+            id: frames.length,
+            working: true,
+          });
+          setFrames(framesCopy);
+        }
       }
     }
   };
   const handleWaveformMousMove = (event) => {
+    console.log("mouse move event");
     if (canDraw) {
       if (isMouseDown) {
         const [maxLeftEnd, maxRightEnd] = getMaximalEndingPosition(
@@ -77,27 +88,51 @@ export const FramesContainer = ({
           event,
           waveformCanvas
         );
-        const correctedEndPosition =
+
+        let correctedEndPosition =
           endPosition < maxLeftEnd
             ? maxLeftEnd
             : endPosition > maxRightEnd
             ? maxRightEnd
             : endPosition;
+        correctedEndPosition =
+          Math.abs(correctedEndPosition - startDrawingPosition) >=
+          minimalFrameWidth
+            ? correctedEndPosition
+            : correctedEndPosition > startDrawingPosition
+            ? startDrawingPosition + minimalFrameWidth
+            : startDrawingPosition - minimalFrameWidth;
 
-        const framesCopy = [...frames];
-        const lastFrame = framesCopy[framesCopy.length - 1];
-        lastFrame.start = startDrawingPosition;
-        lastFrame.end = correctedEndPosition;
-        // lastFrame.start = Math.min(startDrawingPosition, correctedEndPosition);
-        // lastFrame.end = Math.max(startDrawingPosition, correctedEndPosition);
-        if (lastFrame.start) setFrames(framesCopy);
+        console.log(
+          "start drawing pos, corrected end pos: ",
+          startDrawingPosition,
+          correctedEndPosition
+        );
+
+        let framesCopy = [...frames];
+        const workingFrame = framesCopy.find((f) => f.working);
+        workingFrame.start = Math.min(
+          startDrawingPosition,
+          correctedEndPosition
+        );
+        workingFrame.end = Math.max(startDrawingPosition, correctedEndPosition);
+
+        setFrames(framesCopy);
       }
     }
   };
   const handleOnMouseUp = (e) => {
+    console.log("mouse up event");
     setIsMouseDown(false);
+    const framesCopy = [...frames];
+    const workingFrame = framesCopy.find((f) => f.working);
+    if (workingFrame) {
+      workingFrame.working = false;
+      setFrames(framesCopy);
+    }
   };
   const handleContainerClick = (e) => {
+    console.log("click event");
     const mousePosition = utils.getMousePositionInPercent(e, self.current);
     setStartTime(
       utils.positionToTimePercent(mousePosition, audioElement.current.duration)
@@ -109,6 +144,7 @@ export const FramesContainer = ({
   };
 
   useEffect(() => {
+    console.log("delete frame useeffect");
     const removeSelectedFrame = (e) => {
       if (e.key === "Delete") {
         const selectedFrame = frames.find((f) => f.selected);
@@ -120,7 +156,7 @@ export const FramesContainer = ({
       document.removeEventListener("keydown", removeSelectedFrame);
     };
   }, [frames]);
-
+  console.log("render end");
   return (
     <div
       id="framesContainer"
@@ -132,7 +168,7 @@ export const FramesContainer = ({
       onClick={handleContainerClick}
     >
       {frames.map(({ start, end, id, selected }) => {
-        return (
+        return end - start > minimalFrameWidth ? (
           <div
             key={id}
             className={"frame" + (selected ? " selected" : "")}
@@ -140,14 +176,10 @@ export const FramesContainer = ({
               console.log("frame clicked, id: ", id);
               selectFrame(id);
             }}
-            style={
-              start === 0 && end === 0 // makes sure we already moved the mouse, not just clicked it. Prevents a glitch.
-                ? { display: "none" }
-                : end > start
-                ? { left: start + "%", width: end - start + "%" }
-                : { left: end + "%", width: start - end + "%" }
-            }
+            style={{ left: start + "%", width: end - start + "%" }}
           ></div>
+        ) : (
+          ""
         );
       })}
     </div>
