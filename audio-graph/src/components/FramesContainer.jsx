@@ -10,7 +10,7 @@ export const FramesContainer = ({
   setStartTime,
   audioElement,
 }) => {
-  console.log("render start");
+  console.log("render container start");
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [startDrawingPosition, setStartDrawingPosition] = useState(null);
   const self = useRef(null);
@@ -34,11 +34,9 @@ export const FramesContainer = ({
     const framesCopy = [...frames];
     const toSelect = framesCopy.find((frame) => frame.id === id);
     toSelect.selected = !toSelect.selected;
-
     framesCopy.forEach((frame) => {
       if (frame.id !== id) frame.selected = false;
     });
-
     console.log("frame selected: ", framesCopy);
     setFrames(framesCopy);
   };
@@ -63,7 +61,6 @@ export const FramesContainer = ({
       if (!isWithinFrame(startPosition, frames)) {
         setIsMouseDown(true);
         setStartDrawingPosition(startPosition);
-
         const workingFrame = frames.find((f) => f.working);
         if (!workingFrame) {
           const framesCopy = [...frames];
@@ -92,13 +89,11 @@ export const FramesContainer = ({
           // only take the frames without the one being drawn now. (last one)
           frames.filter((f) => f.id !== frames[frames.length - 1].id)
         );
-
         const waveformCanvas = document.getElementById("waveform");
         const endPosition = utils.getMousePositionInPercent(
           event,
           waveformCanvas
         );
-
         let correctedEndPosition = // correct by max left/right end
           endPosition < maxLeftEnd
             ? maxLeftEnd
@@ -112,13 +107,11 @@ export const FramesContainer = ({
             : correctedEndPosition > startDrawingPosition
             ? startDrawingPosition + minimalFrameWidth
             : startDrawingPosition - minimalFrameWidth;
-
         console.log(
           "start drawing pos, corrected end pos: ",
           startDrawingPosition,
           correctedEndPosition
         );
-
         let framesCopy = [...frames];
         const workingFrame = framesCopy.find((f) => f.working);
         workingFrame.start = Math.min(
@@ -126,7 +119,6 @@ export const FramesContainer = ({
           correctedEndPosition
         );
         workingFrame.end = Math.max(startDrawingPosition, correctedEndPosition);
-
         setFrames(framesCopy);
         setDisableClick(true);
       }
@@ -155,16 +147,17 @@ export const FramesContainer = ({
   };
   const handleContainerClick = (e) => {
     console.log("click event");
-
-    if (!disableClick) {
-      const mousePosition = utils.getMousePositionInPercent(e, self.current);
+    const mousePosition = utils.getMousePositionInPercent(e, self.current);
+    const frame = isWithinFrame(mousePosition, frames);
+    if (!disableClick && !frame) {
+      // if is in frame, then start time will be set in frame click handler
       setStartTime(
         utils.positionToTimePercent(
           mousePosition,
           audioElement.current.duration
         )
       );
-      const frame = isWithinFrame(mousePosition, frames);
+
       if (!frame) {
         deselectAllFrames();
       }
@@ -184,7 +177,7 @@ export const FramesContainer = ({
       document.removeEventListener("keydown", removeSelectedFrame);
     };
   }, [frames]);
-  console.log("render end");
+  console.log("render container end");
   return (
     <div
       id="framesContainer"
@@ -203,7 +196,7 @@ export const FramesContainer = ({
             className={"frame" + (selected ? " selected" : "")}
             onClick={() => {
               console.log("frame clicked, id: ", id);
-              selectFrame(id);
+              canDelete ? deleteFrame(id) : selectFrame(id);
             }}
             style={{ left: start + "%", width: end - start + "%" }}
           ></div>

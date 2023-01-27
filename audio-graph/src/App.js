@@ -7,6 +7,7 @@ import { FramesContainer } from "./components/FramesContainer";
 import { drawAudio } from "./utilities/drawWaveform";
 import { positionToTimePercent } from "./utilities/utilities";
 import { PlayBar } from "./components/PlayBar";
+import { usePrevious } from "./utilities/hooks";
 
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
@@ -17,29 +18,34 @@ function useStartTimeEndTime(frames, audioElement) {
   const [startTime, setStartTime] = useState(null);
 
   const selectedFrame = frames.length ? frames.find((f) => f.selected) : null;
+  const previousFrames = usePrevious(selectedFrame);
+  const selectedFrameChanged = previousFrames?.id !== selectedFrame?.id;
 
   useEffect(() => {
-    setEndTime(
-      selectedFrame
-        ? positionToTimePercent(
-            Math.max(selectedFrame.start, selectedFrame.end),
-            audioElement.duration
-          )
-        : audioElement
-        ? audioElement.duration
-        : undefined
-    );
-    setStartTime(
-      selectedFrame
-        ? positionToTimePercent(
-            Math.min(selectedFrame.start, selectedFrame.end),
-            audioElement.duration
-          )
-        : audioElement
-        ? 0
-        : undefined
-    );
-  }, [selectedFrame, audioElement]);
+    // This condition prevents from a PlayBar position (setStartTime(0)) going back to beginning when we are clicking through container
+    if (selectedFrameChanged) {
+      setEndTime(
+        selectedFrame
+          ? positionToTimePercent(
+              Math.max(selectedFrame.start, selectedFrame.end),
+              audioElement.duration
+            )
+          : audioElement
+          ? audioElement.duration
+          : undefined
+      );
+      setStartTime(
+        selectedFrame
+          ? positionToTimePercent(
+              Math.min(selectedFrame.start, selectedFrame.end),
+              audioElement.duration
+            )
+          : audioElement
+          ? 0
+          : undefined
+      );
+    }
+  }, [selectedFrame, audioElement, selectedFrameChanged]);
 
   return [startTime, setStartTime, endTime, setEndTime];
 }
@@ -131,18 +137,22 @@ function App() {
   const stop = (e) => {
     setIsPlaying(false);
     if (audioElement.current.currentTime) audioElement.current.currentTime = 0;
+    setStartTime(0);
   };
+  const undoLastFrame = () => {
+    const framesCopy = [...frames];
+    framesCopy.pop();
+    setFrames(framesCopy);
+  };
+
+  useEffect(() => {
+    console.log("App.js, current time: ", startTime);
+  });
 
   // console.log("render end");
   return (
     <div className="App">
-      <audio
-        id="audio"
-        controls
-        ref={audioElement}
-        src={audioSource}
-        // onLoad={(e) => handleAudioLoad(e)}
-      ></audio>
+      <audio id="audio" controls ref={audioElement} src={audioSource}></audio>
       <Container className="main">
         <div className="upper-row">
           <input
@@ -184,6 +194,14 @@ function App() {
             }
           >
             Delete
+          </button>
+
+          <button
+            id="undo-btn"
+            onClick={() => undoLastFrame()}
+            className="btn btn-warning"
+          >
+            Undo
           </button>
         </div>
 

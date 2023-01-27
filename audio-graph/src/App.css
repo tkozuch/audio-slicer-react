@@ -89,6 +89,9 @@ canvas {
   margin-left: auto;
   margin-right: 10px;
 }
+#delete-btn {
+  margin-right: 10px;
+}
 
 .play-btn,
 .pause-btn {
