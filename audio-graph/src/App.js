@@ -22,7 +22,7 @@ function useStartTimeEndTime(frames, audioElement) {
   const selectedFrameChanged = previousFrames?.id !== selectedFrame?.id;
 
   useEffect(() => {
-    // This condition prevents from a PlayBar position (setStartTime(0)) going back to beginning when we are clicking through container
+    // This condition prevents from PlayBar position (setStartTime(0)) going back to beginning when we are clicking through container, before going to the actual position. This is because we are setting frames to framesCopy on mouseDown in FramesContainer and thus the selectedFrame object changes even though it is "the same" (with the same id) object (is just because of objects comoparison - {} !== {})
     if (selectedFrameChanged) {
       setEndTime(
         selectedFrame
@@ -68,10 +68,9 @@ function App() {
   const selectedFrame = frames.find((f) => f.selected);
 
   useEffect(() => {
-    let pauseInterval;
+    let playInterval;
     if (isPlaying) {
-      pauseInterval = setInterval(() => {
-        // console.log("interval set. ", startTime, endTime);
+      playInterval = setInterval(() => {
         setStartTime(audioElement.current.currentTime);
         if (audioElement.current.currentTime >= endTime) {
           audioElement.current.pause();
@@ -90,7 +89,7 @@ function App() {
 
     return () => {
       console.log("interval UNset. ", startTime, endTime);
-      clearInterval(pauseInterval);
+      clearInterval(playInterval);
     };
   }, [isPlaying]);
 
@@ -144,10 +143,6 @@ function App() {
     framesCopy.pop();
     setFrames(framesCopy);
   };
-
-  useEffect(() => {
-    console.log("App.js, current time: ", startTime);
-  });
 
   // console.log("render end");
   return (

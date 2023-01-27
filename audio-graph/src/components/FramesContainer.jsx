@@ -9,6 +9,8 @@ export const FramesContainer = ({
   setFrames,
   setStartTime,
   audioElement,
+  isPlaying,
+  setIsPlaying,
 }) => {
   console.log("render container start");
   const [isMouseDown, setIsMouseDown] = useState(false);
@@ -151,12 +153,12 @@ export const FramesContainer = ({
     const frame = isWithinFrame(mousePosition, frames);
     if (!disableClick && !frame) {
       // if is in frame, then start time will be set in frame click handler
-      setStartTime(
-        utils.positionToTimePercent(
-          mousePosition,
-          audioElement.current.duration
-        )
+      const time = utils.positionToTimePercent(
+        mousePosition,
+        audioElement.current.duration
       );
+      setStartTime(time);
+      audioElement.current.currentTime = time;
 
       if (!frame) {
         deselectAllFrames();
