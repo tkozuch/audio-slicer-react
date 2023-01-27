@@ -194,6 +194,7 @@ export const FramesContainer = ({
       onMouseUp={handleOnMouseUp}
       ref={self}
       onClick={handleContainerClick}
+      style={{ userSelect: "none" }}
     >
       {frames.map(({ start, end, id, selected }) => {
         return start !== 0 && end !== 0 ? (

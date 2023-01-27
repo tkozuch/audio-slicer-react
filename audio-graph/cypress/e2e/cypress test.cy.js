@@ -36,6 +36,7 @@
 
 //     // Draw first frame
 //     cy.get("#framesContainer").trigger("mousedown", 15, 30);
+//     cy.wait(5000); // so that the mouse move isn't too fast and app doesn't treat it as click
 //     cy.get("#framesContainer").trigger("mousemove", 300, 50);
 //     cy.get("#framesContainer").trigger("mouseup");
 //     cy.get("#framesContainer > *").should("have.length", 1); // assert frame was drawn
