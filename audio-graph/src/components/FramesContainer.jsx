@@ -16,6 +16,10 @@ export const FramesContainer = ({
   const self = useRef(null);
   const minimalFrameWidth = 1; // in percent
   const [disableClick, setDisableClick] = useState(false);
+  const [lastMouseActionTime, setLastMouseActionTime] = useState({
+    mouseMove: null,
+    mouseDown: null,
+  });
 
   const deleteFrame = (id) => {
     console.log("delete frame event");
@@ -73,12 +77,16 @@ export const FramesContainer = ({
           setFrames(framesCopy);
         }
       }
+      setLastMouseActionTime({ ...lastMouseActionTime, mouseDown: Date.now() });
     }
   };
   const handleWaveformMousMove = (event) => {
     console.log("mouse move event");
     if (canDraw) {
-      if (isMouseDown) {
+      // prevent accidentaly drawing a frame while clicking through the container quickly
+      const isNotAShortClick =
+        lastMouseActionTime.mouseMove - lastMouseActionTime.mouseDown > 100;
+      if (isMouseDown && isNotAShortClick) {
         const [maxLeftEnd, maxRightEnd] = getMaximalEndingPosition(
           startDrawingPosition,
           // only take the frames without the one being drawn now. (last one)
@@ -122,6 +130,10 @@ export const FramesContainer = ({
         setFrames(framesCopy);
         setDisableClick(true);
       }
+      setLastMouseActionTime({
+        ...lastMouseActionTime,
+        mouseMove: Date.now(),
+      });
     }
   };
   const handleOnMouseUp = (e) => {
