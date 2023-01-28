@@ -9,13 +9,11 @@ export const FramesContainer = ({
   setFrames,
   setStartTime,
   audioElement,
-  isPlaying,
-  setIsPlaying,
+  selfRef,
 }) => {
   console.log("render container start");
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [startDrawingPosition, setStartDrawingPosition] = useState(null);
-  const self = useRef(null);
   const minimalFrameWidth = 1; // in percent
   const [disableClick, setDisableClick] = useState(false);
   const [lastMouseActionTime, setLastMouseActionTime] = useState({
@@ -149,7 +147,7 @@ export const FramesContainer = ({
   };
   const handleContainerClick = (e) => {
     console.log("click event");
-    const mousePosition = utils.getMousePositionInPercent(e, self.current);
+    const mousePosition = utils.getMousePositionInPercent(e, selfRef.current);
     const frame = isWithinFrame(mousePosition, frames);
     if (!disableClick && !frame) {
       // if is in frame, then start time will be set in frame click handler
@@ -187,7 +185,7 @@ export const FramesContainer = ({
       onMouseDown={handleWaveFormMouseDown}
       onMouseMove={handleWaveformMousMove}
       onMouseUp={handleOnMouseUp}
-      ref={self}
+      ref={selfRef}
       onClick={handleContainerClick}
       style={{ userSelect: "none" }}
     >

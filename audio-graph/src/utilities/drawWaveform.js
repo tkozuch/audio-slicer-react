@@ -1,7 +1,8 @@
-export const drawAudio = (event, audioContext) => {
+export const drawAudio = (event, audioContext, setAudioBuffer) => {
   var files = event.target.files;
   files[0].arrayBuffer().then((arrayBuffer) => {
     return audioContext.decodeAudioData(arrayBuffer).then((audioBuffer) => {
+      setAudioBuffer(audioBuffer);
       draw(normalizeData(filterData(audioBuffer)));
     });
   });

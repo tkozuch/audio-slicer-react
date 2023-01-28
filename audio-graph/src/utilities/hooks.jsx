@@ -11,3 +11,10 @@ export function usePrevious(value) {
   // Return previous value (happens before update in useEffect above)
   return ref.current;
 }
+
+function useFirstRender() {
+  const ref = useRef(true);
+  const firstRender = ref.current;
+  ref.current = false;
+  return firstRender;
+}

@@ -43,3 +43,39 @@ export function positionToTime(Xcoordinate, containingElement, audioDuration) {
 export function positionToTimePercent(Xcoordinate, audioDuration) {
   return (Xcoordinate / 100) * audioDuration;
 }
+
+const frameToDuration = (
+  frameStart,
+  frameEnd,
+  audioDuration,
+  containerWidth
+) => {
+  console.log(
+    "frame start, frameEnd, containerWidth: ",
+    frameStart,
+    frameEnd,
+    audioDuration
+  );
+  const timeStart = (frameStart / 100) * audioDuration;
+  const timeEnd = (frameEnd / 100) * audioDuration;
+  console.log("frame to duration", timeStart, timeEnd);
+  return [timeStart, timeEnd];
+};
+
+export const frameToSample = (
+  frame,
+  sampleRate,
+  bufferDuration,
+) => {
+  console.log("frame : ", frame);
+  console.log(
+    "frame to duration : ",
+    frameToDuration(frame.start, frame.end, bufferDuration)
+  );
+  const [timeStart, timeEnd] = frameToDuration(
+    frame.start,
+    frame.end,
+    bufferDuration,
+  );
+  return [timeStart * sampleRate, timeEnd * sampleRate];
+};

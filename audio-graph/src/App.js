@@ -1,13 +1,15 @@
 import "./App.css";
 import Container from "react-bootstrap/Container";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 
 import { FramesContainer } from "./components/FramesContainer";
 import { drawAudio } from "./utilities/drawWaveform";
-import { positionToTimePercent } from "./utilities/utilities";
+import { positionToTimePercent, frameToSample } from "./utilities/utilities";
 import { PlayBar } from "./components/PlayBar";
+import { DownloadLinks } from "./components/DownloadLinks";
 import { usePrevious } from "./utilities/hooks";
+import { createAudioBlobForDownload } from "./utilities/prepareAudioForDownload";
 
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
@@ -65,7 +67,46 @@ function App() {
     frames,
     audioElement.current
   );
+  const [filename, setFilename] = useState();
+  const [audioBuffer, setAudioBuffer] = useState();
+  const framesContainerRef = useRef();
   const selectedFrame = frames.find((f) => f.selected);
+  const [links, setLinks] = useState([]);
+
+  const prepareDownloadLinks = useCallback(
+    function prepareDownloadLinks() {
+      if (frames.length > 0) {
+        const dataToDownload = frames.map((frame) => {
+          const [sampleStart, sampleEnd] = frameToSample(
+            frame,
+            audioBuffer.sampleRate,
+            audioBuffer.duration
+          );
+          return createAudioBlobForDownload(
+            audioBuffer,
+            sampleStart,
+            sampleEnd
+          );
+        });
+        const links = [];
+        let [name, extension] = filename.split(".");
+        dataToDownload.forEach((data) => {
+          const link = {
+            href: URL.createObjectURL(data),
+            name: name,
+            extension: extension,
+          };
+          links.push(link);
+        });
+        setLinks(links);
+      } else {
+        alert(
+          "No clips drawn. Plis draw a clip that you want to slice - click and drag with cursor on the waveform, after selecting file."
+        );
+      }
+    },
+    [frames, audioBuffer, setLinks, filename]
+  );
 
   useEffect(() => {
     let playInterval;
@@ -155,7 +196,8 @@ function App() {
             id="upload"
             onChange={(event) => {
               initializeAudioElement(event);
-              drawAudio(event, audioContext);
+              drawAudio(event, audioContext, setAudioBuffer);
+              setFilename(event.target.files[0].name);
             }}
           />
 
@@ -163,6 +205,7 @@ function App() {
             id="mark-btn"
             onClick={() => {
               setFramesContainerState({
+                ...framesContainerState,
                 canDraw: !framesContainerState.canDraw,
               });
             }}
@@ -179,6 +222,7 @@ function App() {
             id="delete-btn"
             onClick={() => {
               setFramesContainerState({
+                ...framesContainerState,
                 canDelete: !framesContainerState.canDelete,
               });
             }}
@@ -213,6 +257,7 @@ function App() {
             setFrames={setFrames}
             setStartTime={setStartTime}
             audioElement={audioElement}
+            selfRef={framesContainerRef}
           ></FramesContainer>
         </div>
 
@@ -249,7 +294,24 @@ function App() {
           >
             STOP
           </button>
+
+          <button
+            className="btn btn-primary slice-btn"
+            onClick={() =>
+              prepareDownloadLinks(
+                frames,
+                audioBuffer,
+                filename,
+                framesContainerRef?.current?.getBoundingClientRect().width,
+                setLinks
+              )
+            }
+          >
+            SLICE
+          </button>
         </div>
+
+        <DownloadLinks links={links}></DownloadLinks>
       </Container>
     </div>
   );
