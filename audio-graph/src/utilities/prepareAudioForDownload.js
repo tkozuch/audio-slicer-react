@@ -1,15 +1,10 @@
 /* start and end are parameters of what portion of the buffer do we want to include - where to start and where to end. */
-export function createAudioBlobForDownload(audioBuffer, start, end) {
-  const [left, right] = [
-    audioBuffer.getChannelData(0).slice(start, end),
-    audioBuffer.getChannelData(1).slice(start, end),
-  ];
-
+export function createAudioBlobForDownload(leftData, rightData) {
   // interleaved
-  const interleaved = new Float32Array(left.length + right.length);
-  for (let src = 0, dst = 0; src < left.length; src++, dst += 2) {
-    interleaved[dst] = left[src];
-    interleaved[dst + 1] = right[src];
+  const interleaved = new Float32Array(leftData.length + rightData.length);
+  for (let src = 0, dst = 0; src < leftData.length; src++, dst += 2) {
+    interleaved[dst] = leftData[src];
+    interleaved[dst + 1] = rightData[src];
   }
 
   // get WAV file bytes and audio params of your audio source

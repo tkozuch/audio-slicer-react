@@ -72,20 +72,77 @@ function App() {
   const framesContainerRef = useRef();
   const selectedFrame = frames.find((f) => f.selected);
   const [links, setLinks] = useState([]);
+  const [mode, setMode] = useState({
+    keep: true, // means the frames are to keep, if set to false, the frames are the part to delete
+    concatenate: false, // means every frame will be in separate file
+  });
 
   const prepareDownloadLinks = useCallback(
     function prepareDownloadLinks() {
+      console.log("prepare download links");
       if (frames.length > 0) {
-        const dataToDownload = frames.map((frame) => {
+        const framesToRender = getFramesToRender(mode, frames);
+        console.log("frames to render, ", framesToRender);
+        const framesToRenderInSamples = framesToRender.map((frame) => {
           const [sampleStart, sampleEnd] = frameToSample(
             frame,
             audioBuffer.sampleRate,
             audioBuffer.duration
           );
+          return {
+            start: sampleStart,
+            end: sampleEnd,
+          };
+        });
+        console.log("in samples: ", framesToRenderInSamples);
+
+        let framesChannelData = framesToRenderInSamples.map((frame) => {
+          const [leftData, rightData] = [
+            audioBuffer.getChannelData(0).slice(frame.start, frame.end),
+            audioBuffer.getChannelData(1).slice(frame.start, frame.end),
+          ];
+          return {
+            leftChannel: leftData,
+            rightChannel: rightData,
+          };
+        });
+        console.log("frames channel data, ", framesChannelData);
+
+        if (mode.concatenate) {
+          framesChannelData = framesChannelData.reduce(
+            (prevVal, currentValue) => {
+              console.log("prev value: ", prevVal);
+              console.log("current val: ", currentValue);
+              const leftChannel = new Float32Array([
+                ...prevVal.leftChannel,
+                ...currentValue.leftChannel,
+              ]);
+              const rightChannel = new Float32Array([
+                ...prevVal.rightChannel,
+                ...currentValue.rightChannel,
+              ]);
+              const framesData = {
+                leftChannel,
+                rightChannel,
+              };
+              console.log("frames data: ", framesData);
+
+              return framesData;
+            },
+
+            {
+              leftChannel: [],
+              rightChannel: [],
+            }
+          );
+          framesChannelData = [framesChannelData];
+        }
+        console.log("framesChannelData", framesChannelData);
+
+        const dataToDownload = framesChannelData.map((frame) => {
           return createAudioBlobForDownload(
-            audioBuffer,
-            sampleStart,
-            sampleEnd
+            frame.leftChannel,
+            frame.rightChannel
           );
         });
         const links = [];
@@ -105,7 +162,7 @@ function App() {
         );
       }
     },
-    [frames, audioBuffer, setLinks, filename]
+    [frames, audioBuffer, setLinks, filename, mode]
   );
 
   useEffect(() => {
@@ -183,6 +240,26 @@ function App() {
     const framesCopy = [...frames];
     framesCopy.pop();
     setFrames(framesCopy);
+  };
+  const handleKeepThrowOutSelect = (e) => {
+    const value = e.target.value;
+    if (value === "keep") {
+      setMode({ ...mode, keep: true });
+    } else if (value === "delete") {
+      setMode({ ...mode, keep: false });
+    } else {
+      throw new Error("this should not happen");
+    }
+  };
+  const handleSingleMultipleSelect = (e) => {
+    const value = e.target.value;
+    if (value === "single") {
+      setMode({ ...mode, concatenate: true });
+    } else if (value === "multiple") {
+      setMode({ ...mode, concatenate: false });
+    } else {
+      throw new Error("this should not happen");
+    }
   };
 
   // console.log("render end");
@@ -295,6 +372,32 @@ function App() {
             STOP
           </button>
 
+          <div className="options-wrapper">
+            <select
+              className="options-select"
+              onClick={handleKeepThrowOutSelect}
+            >
+              <option value="keep" selected={mode.keep}>
+                Keep selected time
+              </option>
+              <option value="delete" selected={!mode.keep}>
+                Throw out selected time
+              </option>
+            </select>
+            <select
+              className="options-select"
+              onClick={handleSingleMultipleSelect}
+            >
+              <option value="single" selected={mode.concatenate}>
+                Render to single file
+              </option>
+              <option value="multiple" selected={!mode.concatenate}>
+                Render multiple files
+              </option>
+              Render to single file
+            </select>
+          </div>
+
           <button
             className="btn btn-primary slice-btn"
             onClick={() =>
@@ -315,6 +418,67 @@ function App() {
       </Container>
     </div>
   );
+}
+
+function getFramesToRender(mode, frames) {
+  const audioDuration = 100; // in percent
+
+  if (frames.length === 0) {
+    throw new Error(
+      "This should not happen. You passed empty frames to render"
+    );
+  }
+  let toRender = [];
+  const sortedFrames = frames.sort((a, b) => a.start - b.start);
+  console.log("sorted frames", sortedFrames);
+
+  if (mode.keep) {
+    console.log("mode keep");
+    toRender = toRender.concat(sortedFrames);
+  }
+  // mode "throw out" (throw out the marked frames)
+  else {
+    // i <= sortedFrames.length and not i < sF.length -> on purpose, because after
+    // last frame there can still be place till the end - a fragment to render.
+    for (let i = 0; i++; i <= sortedFrames.length) {
+      console.log("in loop frame");
+      if (i === 0) {
+        let start = 0;
+        let end = sortedFrames[i].start;
+        // first frame didn't start at "start" (0s)
+        if (start !== end) {
+          toRender.push({
+            start,
+            end,
+          });
+        }
+      }
+      // is not last frame
+      else if (i !== sortedFrames.length) {
+        let start = sortedFrames[i - 1].end; // end of previous frame
+        let end = sortedFrames[i].start;
+        // in case two frames are adjacent
+        if (start !== end) {
+          toRender.push({
+            start,
+            end,
+          });
+        }
+      } else {
+        let start = sortedFrames[i - 1].end;
+        let end = audioDuration;
+        // last frame didn't end at the waveform end
+        if (start !== end) {
+          toRender.push({
+            start,
+            end,
+          });
+        }
+      }
+    }
+  }
+  console.log("to render ", toRender);
+  return toRender;
 }
 
 export default App;
