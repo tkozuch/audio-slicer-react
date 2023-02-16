@@ -431,6 +431,7 @@ function getFramesToRender(mode, frames) {
   let toRender = [];
   const sortedFrames = frames.sort((a, b) => a.start - b.start);
   console.log("sorted frames", sortedFrames);
+  console.log("mode: ", mode);
 
   if (mode.keep) {
     console.log("mode keep");
@@ -438,13 +439,15 @@ function getFramesToRender(mode, frames) {
   }
   // mode "throw out" (throw out the marked frames)
   else {
+    console.log("in else", sortedFrames.length);
     // i <= sortedFrames.length and not i < sF.length -> on purpose, because after
     // last frame there can still be place till the end - a fragment to render.
-    for (let i = 0; i++; i <= sortedFrames.length) {
+    for (var i = 0; i <= sortedFrames.length; i++) {
       console.log("in loop frame");
       if (i === 0) {
         let start = 0;
         let end = sortedFrames[i].start;
+        console.log(`i = ${i}: `, start, end);
         // first frame didn't start at "start" (0s)
         if (start !== end) {
           toRender.push({
@@ -458,6 +461,7 @@ function getFramesToRender(mode, frames) {
         let start = sortedFrames[i - 1].end; // end of previous frame
         let end = sortedFrames[i].start;
         // in case two frames are adjacent
+        console.log(`i = ${i}: `, start, end);
         if (start !== end) {
           toRender.push({
             start,
@@ -468,6 +472,7 @@ function getFramesToRender(mode, frames) {
         let start = sortedFrames[i - 1].end;
         let end = audioDuration;
         // last frame didn't end at the waveform end
+        console.log(`i = ${i}: `, start, end);
         if (start !== end) {
           toRender.push({
             start,
