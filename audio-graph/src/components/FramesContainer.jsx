@@ -11,7 +11,7 @@ export const FramesContainer = ({
   audioElement,
   selfRef,
 }) => {
-  console.log("render container start");
+  // console.log("render container start");
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [startDrawingPosition, setStartDrawingPosition] = useState(null);
   const minimalFrameWidth = 1; // in percent
@@ -177,7 +177,7 @@ export const FramesContainer = ({
       document.removeEventListener("keydown", removeSelectedFrame);
     };
   }, [frames]);
-  console.log("render container end");
+  // console.log("render container end");
   return (
     <div
       id="framesContainer"

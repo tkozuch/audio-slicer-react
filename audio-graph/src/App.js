@@ -76,6 +76,20 @@ function App() {
     keep: true, // means the frames are to keep, if set to false, the frames are the part to delete
     concatenate: false, // means every frame will be in separate file
   });
+  // const play = useCallback(
+  //   (e) => {
+  //     // if (startTime && endTime) {
+  //     audioElement.current.currentTime = startTime;
+  //     audioElement.current.play();
+  //     setIsPlaying(true);
+  //     // }
+  //   },
+  //   [setIsPlaying, startTime]
+  // );
+  // const pause = useCallback((e) => {
+  //   setIsPlaying(false);
+  //   audioElement.current.pause();
+  // }, []);
 
   const prepareDownloadLinks = useCallback(
     function prepareDownloadLinks() {
@@ -168,9 +182,13 @@ function App() {
   useEffect(() => {
     let playInterval;
     if (isPlaying) {
+      console.log("is playing");
       playInterval = setInterval(() => {
+        console.log("interval set");
         setStartTime(audioElement.current.currentTime);
+        console.log();
         if (audioElement.current.currentTime >= endTime) {
+          console.log("time passed");
           audioElement.current.pause();
           setIsPlaying(false);
           selectedFrame
@@ -189,7 +207,7 @@ function App() {
       console.log("interval UNset. ", startTime, endTime);
       clearInterval(playInterval);
     };
-  }, [isPlaying]);
+  }, [isPlaying, endTime, selectedFrame, setStartTime, startTime]);
 
   useEffect(() => {
     const frames = document.getElementsByClassName("frame");
@@ -231,6 +249,22 @@ function App() {
     setIsPlaying(false);
     document.getElementById("audio").pause();
   };
+
+  useEffect(() => {
+    const playWithSpace = (e) => {
+      if (e.key === " ") {
+        if (isPlaying) {
+          pause();
+        } else {
+          play();
+        }
+      }
+    };
+    document.addEventListener("keydown", playWithSpace);
+    return () => {
+      document.removeEventListener("keydown", playWithSpace);
+    };
+  }, [isPlaying]);
   const stop = (e) => {
     setIsPlaying(false);
     if (audioElement.current.currentTime) audioElement.current.currentTime = 0;
@@ -347,7 +381,10 @@ function App() {
               sm="2"
               id="playBtn"
               className="btn btn-success play-btn"
-              onClick={play}
+              onClick={(e) => {
+                e.target.blur();
+                play();
+              }}
             >
               PLAY
             </button>
@@ -356,7 +393,10 @@ function App() {
               sm="2"
               id="pauseBtn"
               className="btn btn-warning pause-btn"
-              onClick={pause}
+              onClick={(e) => {
+                e.target.blur();
+                pause();
+              }}
             >
               PAUSE
             </button>

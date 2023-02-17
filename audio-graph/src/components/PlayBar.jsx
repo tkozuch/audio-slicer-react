@@ -8,7 +8,7 @@ export const PlayBar = ({ currentTime, audioElement }) => {
 
   useEffect(() => {
     let request;
-    console.log("current time", currentTime);
+    // console.log("current time", currentTime);
     (function drawMovingPlayBar() {
       if (self.current && audioElement.current) {
         self.current.style.left =
