@@ -8,49 +8,12 @@ import { drawAudio } from "./utilities/drawWaveform";
 import { positionToTimePercent, frameToSample } from "./utilities/utilities";
 import { PlayBar } from "./components/PlayBar";
 import { DownloadLinks } from "./components/DownloadLinks";
-import { usePrevious } from "./utilities/hooks";
 import { createAudioBlobForDownload } from "./utilities/prepareAudioForDownload";
 
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
 const audioContext = new AudioContext();
 
-function useStartTimeEndTime(frames, audioElement) {
-  const [endTime, setEndTime] = useState(null);
-  const [startTime, setStartTime] = useState(null);
-
-  const selectedFrame = frames.length ? frames.find((f) => f.selected) : null;
-  const previousFrames = usePrevious(selectedFrame);
-  const selectedFrameChanged = previousFrames?.id !== selectedFrame?.id;
-
-  useEffect(() => {
-    // This condition prevents from PlayBar position (setStartTime(0)) going back to beginning when we are clicking through container, before going to the actual position. This is because we are setting frames to framesCopy on mouseDown in FramesContainer and thus the selectedFrame object changes even though it is "the same" (with the same id) object (is just because of objects comoparison - {} !== {})
-    if (selectedFrameChanged) {
-      setEndTime(
-        selectedFrame
-          ? positionToTimePercent(
-              Math.max(selectedFrame.start, selectedFrame.end),
-              audioElement.duration
-            )
-          : audioElement
-          ? audioElement.duration
-          : undefined
-      );
-      setStartTime(
-        selectedFrame
-          ? positionToTimePercent(
-              Math.min(selectedFrame.start, selectedFrame.end),
-              audioElement.duration
-            )
-          : audioElement
-          ? 0
-          : undefined
-      );
-    }
-  }, [selectedFrame, audioElement, selectedFrameChanged]);
-
-  return [startTime, setStartTime, endTime, setEndTime];
-}
 
 function App() {
   // console.log("render start");
@@ -63,10 +26,10 @@ function App() {
   const audioElement = useRef(null);
   const [audioSource, setAudioSource] = useState(null);
   const waveformRef = useRef(null);
-  const [startTime, setStartTime, endTime, setEndTime] = useStartTimeEndTime(
-    frames,
-    audioElement.current
-  );
+  const [time, setTime] = useState({
+    start: 0,
+    end: audioElement?.current?.duration,
+  });
   const [filename, setFilename] = useState();
   const [audioBuffer, setAudioBuffer] = useState();
   const framesContainerRef = useRef();
@@ -76,20 +39,6 @@ function App() {
     keep: true, // means the frames are to keep, if set to false, the frames are the part to delete
     concatenate: false, // means every frame will be in separate file
   });
-  // const play = useCallback(
-  //   (e) => {
-  //     // if (startTime && endTime) {
-  //     audioElement.current.currentTime = startTime;
-  //     audioElement.current.play();
-  //     setIsPlaying(true);
-  //     // }
-  //   },
-  //   [setIsPlaying, startTime]
-  // );
-  // const pause = useCallback((e) => {
-  //   setIsPlaying(false);
-  //   audioElement.current.pause();
-  // }, []);
 
   const prepareDownloadLinks = useCallback(
     function prepareDownloadLinks() {
@@ -185,29 +134,30 @@ function App() {
       console.log("is playing");
       playInterval = setInterval(() => {
         console.log("interval set");
-        setStartTime(audioElement.current.currentTime);
+        setTime({ ...time, start: audioElement.current.currentTime });
         console.log();
-        if (audioElement.current.currentTime >= endTime) {
+        if (audioElement.current.currentTime >= time.end) {
           console.log("time passed");
           audioElement.current.pause();
           setIsPlaying(false);
           selectedFrame
-            ? setStartTime(
-                positionToTimePercent(
+            ? setTime({
+                ...time,
+                start: positionToTimePercent(
                   Math.min(selectedFrame.start, selectedFrame.end),
                   audioElement.current.duration
-                )
-              )
-            : setStartTime(0);
+                ),
+              })
+            : setTime({ ...time, start: 0 });
         }
       }, 10);
     }
 
     return () => {
-      console.log("interval UNset. ", startTime, endTime);
+      console.log("interval UNset. ", time);
       clearInterval(playInterval);
     };
-  }, [isPlaying, endTime, selectedFrame, setStartTime, startTime]);
+  }, [isPlaying, selectedFrame, time, setTime]);
 
   useEffect(() => {
     const frames = document.getElementsByClassName("frame");
@@ -227,8 +177,7 @@ function App() {
   useEffect(() => {
     const current = audioElement.current;
     const handleDurationChange = () => {
-      setStartTime(0);
-      setEndTime(current.duration);
+      setTime({ start: 0, end: current.duration });
       setFrames([]);
     };
     if (current) {
@@ -237,10 +186,10 @@ function App() {
     return () => {
       current.removeEventListener("durationchange", handleDurationChange);
     };
-  }, [audioSource, setStartTime, setEndTime]);
+  }, [audioSource, setTime]);
   const play = (e) => {
     // if (startTime && endTime) {
-    audioElement.current.currentTime = startTime;
+    audioElement.current.currentTime = time.start;
     audioElement.current.play();
     setIsPlaying(true);
     // }
@@ -268,7 +217,7 @@ function App() {
   const stop = (e) => {
     setIsPlaying(false);
     if (audioElement.current.currentTime) audioElement.current.currentTime = 0;
-    setStartTime(0);
+    setTime({ ...time, start: 0 });
   };
   const undoLastFrame = () => {
     const framesCopy = [...frames];
@@ -366,14 +315,14 @@ function App() {
             {...framesContainerState}
             frames={frames}
             setFrames={setFrames}
-            setStartTime={setStartTime}
+            setTime={setTime}
             audioElement={audioElement}
             selfRef={framesContainerRef}
           ></FramesContainer>
         </div>
 
         {/* currentTime is set to StartTime, because the StartTime updates to audio element current time when playing */}
-        <PlayBar audioElement={audioElement} currentTime={startTime}></PlayBar>
+        <PlayBar audioElement={audioElement} currentTime={time.start}></PlayBar>
 
         <div className="down-buttons-wrapper">
           {!isPlaying ? (
@@ -416,24 +365,18 @@ function App() {
             <select
               className="options-select"
               onClick={handleKeepThrowOutSelect}
+              defaultValue={mode.keep ? "keep" : "delete"}
             >
-              <option value="keep" selected={mode.keep}>
-                Keep selected time
-              </option>
-              <option value="delete" selected={!mode.keep}>
-                Throw out selected time
-              </option>
+              <option value="keep">Keep selected time</option>
+              <option value="delete">Throw out selected time</option>
             </select>
             <select
               className="options-select"
               onClick={handleSingleMultipleSelect}
+              defaultValue={!mode.concatenate ? "multiple" : "single"}
             >
-              <option value="single" selected={mode.concatenate}>
-                Render to single file
-              </option>
-              <option value="multiple" selected={!mode.concatenate}>
-                Render multiple files
-              </option>
+              <option value="single">Render to single file</option>
+              <option value="multiple">Render multiple files</option>
               Render to single file
             </select>
           </div>

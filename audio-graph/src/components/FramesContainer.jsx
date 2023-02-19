@@ -7,7 +7,7 @@ export const FramesContainer = ({
   canDelete,
   frames,
   setFrames,
-  setStartTime,
+  setTime,
   audioElement,
   selfRef,
 }) => {
@@ -37,8 +37,18 @@ export const FramesContainer = ({
     framesCopy.forEach((frame) => {
       if (frame.id !== id) frame.selected = false;
     });
-    console.log("frame selected: ", framesCopy);
+    console.log("frame selected: ", toSelect);
     setFrames(framesCopy);
+    setTime({
+      start: utils.positionToTimePercent(
+        toSelect.start,
+        audioElement?.current?.duration
+      ), // toSelect is the currently selected frame
+      end: utils.positionToTimePercent(
+        toSelect.end,
+        audioElement?.current?.duration
+      ),
+    });
   };
 
   const deselectAllFrames = (e) => {
@@ -155,7 +165,9 @@ export const FramesContainer = ({
         mousePosition,
         audioElement.current.duration
       );
-      setStartTime(time);
+      console.log("setting startTime: ", time);
+      setLastMouseActionTime(mousePosition);
+      setTime({ start: time, end: audioElement.current.duration });
       audioElement.current.currentTime = time;
 
       if (!frame) {

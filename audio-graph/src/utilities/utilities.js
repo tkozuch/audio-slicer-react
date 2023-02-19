@@ -41,6 +41,12 @@ export function positionToTime(Xcoordinate, containingElement, audioDuration) {
 }
 
 export function positionToTimePercent(Xcoordinate, audioDuration) {
+  console.log("pos to time. a duration: ", audioDuration);
+  if (!audioDuration) {
+    throw new Error(
+      "Trying to parse position to time, with unknown or 0 time duration."
+    );
+  }
   return (Xcoordinate / 100) * audioDuration;
 }
 
@@ -62,11 +68,7 @@ const frameToDuration = (
   return [timeStart, timeEnd];
 };
 
-export const frameToSample = (
-  frame,
-  sampleRate,
-  bufferDuration,
-) => {
+export const frameToSample = (frame, sampleRate, bufferDuration) => {
   console.log("frame : ", frame);
   console.log(
     "frame to duration : ",
@@ -75,7 +77,7 @@ export const frameToSample = (
   const [timeStart, timeEnd] = frameToDuration(
     frame.start,
     frame.end,
-    bufferDuration,
+    bufferDuration
   );
   return [timeStart * sampleRate, timeEnd * sampleRate];
 };
