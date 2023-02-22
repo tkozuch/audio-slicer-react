@@ -1,10 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 
 import * as utils from "../utilities/utilities";
 
 export const FramesContainer = ({
-  canDraw,
-  canDelete,
+  mode,
   frames,
   setFrames,
   setTime,
@@ -53,7 +52,7 @@ export const FramesContainer = ({
 
   const deselectAllFrames = (e) => {
     console.log("deselect frames event");
-    if (!canDelete) {
+    if (mode !== "delete") {
       const framesCopy = [...frames];
       framesCopy.forEach((f) => (f.selected = false));
       setFrames(framesCopy);
@@ -63,7 +62,7 @@ export const FramesContainer = ({
   const handleWaveFormMouseDown = (e) => {
     setDisableClick(false);
     console.log("mouse down event");
-    if (canDraw) {
+    if (mode === "draw") {
       const waveformCanvas = document.getElementById("waveform");
       const startPosition = utils.getMousePositionInPercent(e, waveformCanvas);
       console.log("start position: ", startPosition);
@@ -89,7 +88,7 @@ export const FramesContainer = ({
   };
   const handleWaveformMousMove = (event) => {
     console.log("mouse move event");
-    if (canDraw) {
+    if (mode === "draw") {
       // prevent accidentaly drawing a frame while clicking through the container quickly
       const isNotAShortClick =
         lastMouseActionTime.mouseMove - lastMouseActionTime.mouseDown > 100;
@@ -208,7 +207,7 @@ export const FramesContainer = ({
             className={"frame" + (selected ? " selected" : "")}
             onClick={() => {
               console.log("frame clicked, id: ", id);
-              canDelete ? deleteFrame(id) : selectFrame(id);
+              mode === "delete" ? deleteFrame(id) : selectFrame(id);
             }}
             style={{ left: start + "%", width: end - start + "%" }}
           ></div>

@@ -89,7 +89,8 @@ canvas {
   margin-left: auto;
   margin-right: 10px;
 }
-#delete-btn {
+#delete-btn,
+#adjust-btn {
   margin-right: 10px;
 }
 

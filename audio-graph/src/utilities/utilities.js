@@ -41,7 +41,6 @@ export function positionToTime(Xcoordinate, containingElement, audioDuration) {
 }
 
 export function positionToTimePercent(Xcoordinate, audioDuration) {
-  console.log("pos to time. a duration: ", audioDuration);
   if (!audioDuration) {
     throw new Error(
       "Trying to parse position to time, with unknown or 0 time duration."

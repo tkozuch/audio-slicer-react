@@ -14,14 +14,10 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
 const audioContext = new AudioContext();
 
-
 function App() {
   // console.log("render start");
   const [frames, setFrames] = useState([]);
-  const [framesContainerState, setFramesContainerState] = useState({
-    canDraw: true,
-    canDelete: false,
-  });
+  const [mode, setMode] = useState("draw"); // draw / delete / adjust
   const [isPlaying, setIsPlaying] = useState(false);
   const audioElement = useRef(null);
   const [audioSource, setAudioSource] = useState(null);
@@ -35,7 +31,7 @@ function App() {
   const framesContainerRef = useRef();
   const selectedFrame = frames.find((f) => f.selected);
   const [links, setLinks] = useState([]);
-  const [mode, setMode] = useState({
+  const [renderMode, setRenderMode] = useState({
     keep: true, // means the frames are to keep, if set to false, the frames are the part to delete
     concatenate: false, // means every frame will be in separate file
   });
@@ -44,7 +40,7 @@ function App() {
     function prepareDownloadLinks() {
       console.log("prepare download links");
       if (frames.length > 0) {
-        const framesToRender = getFramesToRender(mode, frames);
+        const framesToRender = getFramesToRender(renderMode, frames);
         console.log("frames to render, ", framesToRender);
         const framesToRenderInSamples = framesToRender.map((frame) => {
           const [sampleStart, sampleEnd] = frameToSample(
@@ -71,7 +67,7 @@ function App() {
         });
         console.log("frames channel data, ", framesChannelData);
 
-        if (mode.concatenate) {
+        if (renderMode.concatenate) {
           framesChannelData = framesChannelData.reduce(
             (prevVal, currentValue) => {
               console.log("prev value: ", prevVal);
@@ -125,7 +121,7 @@ function App() {
         );
       }
     },
-    [frames, audioBuffer, setLinks, filename, mode]
+    [frames, audioBuffer, setLinks, filename, renderMode]
   );
 
   useEffect(() => {
@@ -133,9 +129,9 @@ function App() {
     if (isPlaying) {
       console.log("is playing");
       playInterval = setInterval(() => {
-        console.log("interval set");
+        // console.log("interval set");
         setTime({ ...time, start: audioElement.current.currentTime });
-        console.log();
+        // console.log("start time: ", audioElement.current.currentTime);
         if (audioElement.current.currentTime >= time.end) {
           console.log("time passed");
           audioElement.current.pause();
@@ -154,19 +150,19 @@ function App() {
     }
 
     return () => {
-      console.log("interval UNset. ", time);
+      // console.log("interval UNset. ", time);
       clearInterval(playInterval);
     };
   }, [isPlaying, selectedFrame, time, setTime]);
 
   useEffect(() => {
     const frames = document.getElementsByClassName("frame");
-    const cursor = framesContainerState.canDelete ? "no-drop" : "unset";
+    const cursor = mode === "delete" ? "no-drop" : "unset";
 
     if (frames.length) {
       new Array(...frames).forEach((frame) => (frame.style.cursor = cursor));
     }
-  }, [framesContainerState]);
+  }, [mode]);
 
   const initializeAudioElement = (event) => {
     console.log("initializing audio element");
@@ -188,11 +184,9 @@ function App() {
     };
   }, [audioSource, setTime]);
   const play = (e) => {
-    // if (startTime && endTime) {
     audioElement.current.currentTime = time.start;
     audioElement.current.play();
     setIsPlaying(true);
-    // }
   };
   const pause = (e) => {
     setIsPlaying(false);
@@ -213,7 +207,7 @@ function App() {
     return () => {
       document.removeEventListener("keydown", playWithSpace);
     };
-  }, [isPlaying]);
+  }, [isPlaying, time.start]);
   const stop = (e) => {
     setIsPlaying(false);
     if (audioElement.current.currentTime) audioElement.current.currentTime = 0;
@@ -227,9 +221,9 @@ function App() {
   const handleKeepThrowOutSelect = (e) => {
     const value = e.target.value;
     if (value === "keep") {
-      setMode({ ...mode, keep: true });
+      setRenderMode({ ...renderMode, keep: true });
     } else if (value === "delete") {
-      setMode({ ...mode, keep: false });
+      setRenderMode({ ...renderMode, keep: false });
     } else {
       throw new Error("this should not happen");
     }
@@ -237,9 +231,9 @@ function App() {
   const handleSingleMultipleSelect = (e) => {
     const value = e.target.value;
     if (value === "single") {
-      setMode({ ...mode, concatenate: true });
+      setRenderMode({ ...renderMode, concatenate: true });
     } else if (value === "multiple") {
-      setMode({ ...mode, concatenate: false });
+      setRenderMode({ ...renderMode, concatenate: false });
     } else {
       throw new Error("this should not happen");
     }
@@ -264,32 +258,34 @@ function App() {
           <button
             id="mark-btn"
             onClick={() => {
-              setFramesContainerState({
-                ...framesContainerState,
-                canDraw: !framesContainerState.canDraw,
-              });
+              setMode("draw");
             }}
             className={
-              framesContainerState.canDraw
-                ? "btn btn-primary"
-                : "btn btn-secondary"
+              mode === "draw" ? "btn btn-primary" : "btn btn-secondary"
             }
           >
             Mark
           </button>
 
           <button
-            id="delete-btn"
+            id="adjust-btn"
             onClick={() => {
-              setFramesContainerState({
-                ...framesContainerState,
-                canDelete: !framesContainerState.canDelete,
-              });
+              setMode("adjust");
             }}
             className={
-              framesContainerState.canDelete
-                ? "btn btn-primary"
-                : "btn btn-secondary"
+              mode === "adjust" ? "btn btn-primary" : "btn btn-secondary"
+            }
+          >
+            Adjust
+          </button>
+
+          <button
+            id="delete-btn"
+            onClick={() => {
+              setMode("delete");
+            }}
+            className={
+              mode === "delete" ? "btn btn-primary" : "btn btn-secondary"
             }
           >
             Delete
@@ -312,7 +308,7 @@ function App() {
             ref={waveformRef}
           ></canvas>
           <FramesContainer
-            {...framesContainerState}
+            mode={mode}
             frames={frames}
             setFrames={setFrames}
             setTime={setTime}
@@ -365,7 +361,7 @@ function App() {
             <select
               className="options-select"
               onClick={handleKeepThrowOutSelect}
-              defaultValue={mode.keep ? "keep" : "delete"}
+              defaultValue={renderMode.keep ? "keep" : "delete"}
             >
               <option value="keep">Keep selected time</option>
               <option value="delete">Throw out selected time</option>
@@ -373,7 +369,7 @@ function App() {
             <select
               className="options-select"
               onClick={handleSingleMultipleSelect}
-              defaultValue={!mode.concatenate ? "multiple" : "single"}
+              defaultValue={!renderMode.concatenate ? "multiple" : "single"}
             >
               <option value="single">Render to single file</option>
               <option value="multiple">Render multiple files</option>
@@ -403,7 +399,7 @@ function App() {
   );
 }
 
-function getFramesToRender(mode, frames) {
+function getFramesToRender(renderMode, frames) {
   const audioDuration = 100; // in percent
 
   if (frames.length === 0) {
@@ -414,9 +410,9 @@ function getFramesToRender(mode, frames) {
   let toRender = [];
   const sortedFrames = frames.sort((a, b) => a.start - b.start);
   console.log("sorted frames", sortedFrames);
-  console.log("mode: ", mode);
+  console.log("mode: ", renderMode);
 
-  if (mode.keep) {
+  if (renderMode.keep) {
     console.log("mode keep");
     toRender = toRender.concat(sortedFrames);
   }
