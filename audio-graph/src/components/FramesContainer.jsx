@@ -13,12 +13,20 @@ export const FramesContainer = ({
   // console.log("render container start");
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [startDrawingPosition, setStartDrawingPosition] = useState(null);
-  const minimalFrameWidth = 1; // in percent
+  const minimalFrameWidth = 2; // in percent
   const [disableClick, setDisableClick] = useState(false);
   const [lastMouseActionTime, setLastMouseActionTime] = useState({
     mouseMove: null,
     mouseDown: null,
-  });
+  }); // to prevent drawing super small frames when clicking through container
+  const [isAdjusting, setIsAdjusting] = useState(() => mode === "adjust");
+  const frameAdjustmentMargin = 1.4; // percent of the parent container width
+
+  if (minimalFrameWidth - 0.1 <= frameAdjustmentMargin) {
+    throw new Error(
+      "Adjustment margin very close to the minimal frame width. This can cause unpredictable behaviour when adjusting frames."
+    );
+  }
 
   const deleteFrame = (id) => {
     console.log("delete frame event");
@@ -38,6 +46,7 @@ export const FramesContainer = ({
     });
     console.log("frame selected: ", toSelect);
     setFrames(framesCopy);
+    console.log("(selectFrame) setting end time");
     setTime({
       start: utils.positionToTimePercent(
         toSelect.start,
@@ -62,12 +71,13 @@ export const FramesContainer = ({
   const handleWaveFormMouseDown = (e) => {
     setDisableClick(false);
     console.log("mouse down event");
+    const waveformCanvas = document.getElementById("waveform");
+    const mousePosition = utils.getMousePositionInPercent(e, waveformCanvas);
     if (mode === "draw") {
-      const waveformCanvas = document.getElementById("waveform");
-      const startPosition = utils.getMousePositionInPercent(e, waveformCanvas);
+      const startPosition = mousePosition;
       console.log("start position: ", startPosition);
       // we want to start drawing only if the click happened outside the frame
-      if (!isWithinFrame(startPosition, frames)) {
+      if (!utils.isWithinFrame(startPosition, frames)) {
         setIsMouseDown(true);
         setStartDrawingPosition(startPosition);
         const workingFrame = frames.find((f) => f.working);
@@ -84,10 +94,22 @@ export const FramesContainer = ({
         }
       }
       setLastMouseActionTime({ ...lastMouseActionTime, mouseDown: Date.now() });
+    } else if (mode === "adjust") {
+      const [frame, _] = utils.getNearbyFrameSide(
+        mousePosition,
+        frames,
+        frameAdjustmentMargin
+      );
+      if (frame) setIsAdjusting(true);
     }
   };
   const handleWaveformMousMove = (event) => {
     console.log("mouse move event");
+    const waveformCanvas = document.getElementById("waveform");
+    const currentMousePosition = utils.getMousePositionInPercent(
+      event,
+      waveformCanvas
+    );
     if (mode === "draw") {
       // prevent accidentaly drawing a frame while clicking through the container quickly
       const isNotAShortClick =
@@ -98,11 +120,7 @@ export const FramesContainer = ({
           // only take the frames without the one being drawn now. (last one)
           frames.filter((f) => f.id !== frames[frames.length - 1].id)
         );
-        const waveformCanvas = document.getElementById("waveform");
-        const endPosition = utils.getMousePositionInPercent(
-          event,
-          waveformCanvas
-        );
+        const endPosition = currentMousePosition;
         let correctedEndPosition = // correct by max left/right end
           endPosition < maxLeftEnd
             ? maxLeftEnd
@@ -135,6 +153,64 @@ export const FramesContainer = ({
         ...lastMouseActionTime,
         mouseMove: Date.now(),
       });
+    } else if (mode === "adjust") {
+      const [frame, side] = utils.getNearbyFrameSide(
+        currentMousePosition,
+        frames,
+        frameAdjustmentMargin
+      );
+      // console.log("frame, side", frame, side);
+      if (frame) {
+        event.target.style.cursor = "col-resize";
+
+        if (isAdjusting) {
+          const framesCopy = [...frames];
+
+          if (side === "start") {
+            const frameIsTooSmallForAdjustment =
+              currentMousePosition + minimalFrameWidth >= frame.end;
+            frame.start = frameIsTooSmallForAdjustment
+              ? frame.start
+              : currentMousePosition;
+            if (frame.selected) {
+              setTime((time) => {
+                time.start = utils.positionToTimePercent(
+                  frame.start,
+                  audioElement?.current?.duration
+                );
+                return time;
+              });
+            }
+          } else {
+            const frameIsTooSmallForAdjustment =
+              currentMousePosition - minimalFrameWidth <= frame.start;
+            frame.end = frameIsTooSmallForAdjustment
+              ? frame.end
+              : currentMousePosition;
+            if (frame.selected) {
+              setTime((time) => {
+                time.end = utils.positionToTimePercent(
+                  frame.end,
+                  audioElement?.current?.duration
+                );
+                return time;
+              });
+            }
+          }
+
+          framesCopy.map((f) => {
+            if (f.id === frame.id) {
+              return frame;
+            } else {
+              return f;
+            }
+          });
+          console.log("(adjust) setting frames: ", frames);
+          setFrames(framesCopy);
+        }
+      } else {
+        event.target.style.cursor = "default";
+      }
     }
   };
   const handleOnMouseUp = (e) => {
@@ -153,11 +229,14 @@ export const FramesContainer = ({
       );
       setFrames(framesCopy);
     })();
+    if (isAdjusting) {
+      setIsAdjusting(false);
+    }
   };
   const handleContainerClick = (e) => {
     console.log("click event");
     const mousePosition = utils.getMousePositionInPercent(e, selfRef.current);
-    const frame = isWithinFrame(mousePosition, frames);
+    const frame = utils.isWithinFrame(mousePosition, frames);
     if (!disableClick && !frame) {
       // if is in frame, then start time will be set in frame click handler
       const time = utils.positionToTimePercent(
@@ -171,6 +250,25 @@ export const FramesContainer = ({
 
       if (!frame) {
         deselectAllFrames();
+      }
+    }
+  };
+  const handleFrameClick = (e, id) => {
+    console.log("frame clicked, id: ", id);
+    if (mode === "delete") {
+      deleteFrame(id);
+    } else if (mode !== "adjust") {
+      selectFrame(id);
+    } else {
+      const mousePosition = utils.getMousePositionInPercent(e, selfRef.current);
+      const [frame, side] = utils.getNearbyFrameSide(
+        mousePosition,
+        frames,
+        frameAdjustmentMargin
+      );
+      // in this case this means we are not in the adjustment click range
+      if (!frame) {
+        selectFrame(id);
       }
     }
   };
@@ -205,10 +303,7 @@ export const FramesContainer = ({
           <div
             key={id}
             className={"frame" + (selected ? " selected" : "")}
-            onClick={() => {
-              console.log("frame clicked, id: ", id);
-              mode === "delete" ? deleteFrame(id) : selectFrame(id);
-            }}
+            onClick={(e) => handleFrameClick(e, id)}
             style={{ left: start + "%", width: end - start + "%" }}
           ></div>
         ) : (
@@ -219,21 +314,11 @@ export const FramesContainer = ({
   );
 };
 
-const isWithinFrame = (position, frames) => {
-  for (let i = 0; i < frames.length; i++) {
-    if (
-      (position >= frames[i].start && position <= frames[i].end) ||
-      (position <= frames[i].start && position >= frames[i].end)
-    ) {
-      return frames[i];
-    }
-  }
-  return false;
-};
-
 // given a frame start point, get maximal position on where the end of the frame can lay
 // so that it doesn't overlap any of the already drawn frames
 const getMaximalEndingPosition = (start, frames) => {
+  // TODO: FIX - below comment is no longer valid
+
   // frame edges are basically either "starts" or "ends" of each frame on the
   // left/right of start. This is because we can't be sure whether the start or
   // end of each frame is on the right/left -> thus we don't mind the start or

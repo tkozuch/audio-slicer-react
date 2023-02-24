@@ -49,12 +49,7 @@ export function positionToTimePercent(Xcoordinate, audioDuration) {
   return (Xcoordinate / 100) * audioDuration;
 }
 
-const frameToDuration = (
-  frameStart,
-  frameEnd,
-  audioDuration,
-  containerWidth
-) => {
+const frameToDuration = (frameStart, frameEnd, audioDuration) => {
   console.log(
     "frame start, frameEnd, containerWidth: ",
     frameStart,
@@ -79,4 +74,42 @@ export const frameToSample = (frame, sampleRate, bufferDuration) => {
     bufferDuration
   );
   return [timeStart * sampleRate, timeEnd * sampleRate];
+};
+
+export const isWithinFrame = (mousePosition, frames, margin) => {
+  if (margin === undefined || margin === null) {
+    margin = 0;
+  }
+
+  for (let i = 0; i < frames.length; i++) {
+    if (
+      mousePosition >= frames[i].start - margin &&
+      mousePosition <= frames[i].end + margin
+    ) {
+      return frames[i];
+    }
+  }
+  return false;
+};
+
+export const getNearbyFrameSide = (mousePosition, frames, margin) => {
+  if (margin === undefined || margin === null) {
+    margin = 0;
+  }
+  // console.log("current mouse position : ", mousePosition);
+  // console.log("frames : ", frames);
+  for (let i = 0; i < frames.length; i++) {
+    if (
+      mousePosition >= frames[i].start - margin &&
+      mousePosition <= frames[i].start + margin
+    ) {
+      return [frames[i], "start"];
+    } else if (
+      mousePosition >= frames[i].end - margin &&
+      mousePosition <= frames[i].end + margin
+    ) {
+      return [frames[i], "end"];
+    }
+  }
+  return [false, false];
 };

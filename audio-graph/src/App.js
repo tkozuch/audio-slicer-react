@@ -132,6 +132,7 @@ function App() {
         // console.log("interval set");
         setTime({ ...time, start: audioElement.current.currentTime });
         // console.log("start time: ", audioElement.current.currentTime);
+        console.log("(play interval), time.end: ", time.end);
         if (audioElement.current.currentTime >= time.end) {
           console.log("time passed");
           audioElement.current.pause();
@@ -153,11 +154,11 @@ function App() {
       // console.log("interval UNset. ", time);
       clearInterval(playInterval);
     };
-  }, [isPlaying, selectedFrame, time, setTime]);
+  }, [isPlaying, selectedFrame, time, time.end, setTime]);
 
   useEffect(() => {
     const frames = document.getElementsByClassName("frame");
-    const cursor = mode === "delete" ? "no-drop" : "unset";
+    const cursor = mode === "delete" ? "no-drop" : "default";
 
     if (frames.length) {
       new Array(...frames).forEach((frame) => (frame.style.cursor = cursor));
@@ -173,6 +174,7 @@ function App() {
   useEffect(() => {
     const current = audioElement.current;
     const handleDurationChange = () => {
+      console.log("setting end time to duration");
       setTime({ start: 0, end: current.duration });
       setFrames([]);
     };
@@ -183,11 +185,14 @@ function App() {
       current.removeEventListener("durationchange", handleDurationChange);
     };
   }, [audioSource, setTime]);
-  const play = (e) => {
-    audioElement.current.currentTime = time.start;
-    audioElement.current.play();
-    setIsPlaying(true);
-  };
+  const play = useCallback(
+    (e) => {
+      audioElement.current.currentTime = time.start;
+      audioElement.current.play();
+      setIsPlaying(true);
+    },
+    [time.start]
+  );
   const pause = (e) => {
     setIsPlaying(false);
     document.getElementById("audio").pause();

@@ -110,6 +110,7 @@ canvas {
   height: 220px;
   top: -200px;
   border: 1px solid lightblue;
+  pointer-events: none;
 }
 .time-indicator {
   text-align: center;
