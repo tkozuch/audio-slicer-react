@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 import * as utils from "../utilities/utilities";
 
@@ -22,6 +22,7 @@ export const FramesContainer = ({
   const [isAdjusting, setIsAdjusting] = useState(() => mode === "adjust");
   const frameAdjustmentMargin = 1.4; // percent of the parent container width
   const [playbarIndicatorPosition, setPlaybarIndicatorPosition] = useState(0);
+  const playbarIndicator = useRef(null);
 
   if (minimalFrameWidth - 0.1 <= frameAdjustmentMargin) {
     throw new Error(
@@ -299,6 +300,16 @@ export const FramesContainer = ({
       ref={selfRef}
       onClick={handleContainerClick}
       style={{ userSelect: "none" }}
+      onMouseLeave={() => {
+        if (playbarIndicator?.current) {
+          playbarIndicator.current.style.display = "none";
+        }
+      }}
+      onMouseEnter={() => {
+        if (playbarIndicator?.current) {
+          playbarIndicator.current.style.display = "unset";
+        }
+      }}
     >
       {frames.map(({ start, end, id, selected }) => {
         return start !== 0 && end !== 0 ? (
@@ -315,6 +326,7 @@ export const FramesContainer = ({
       <div
         className="playbar-indicator"
         style={{ left: playbarIndicatorPosition + "%" }}
+        ref={playbarIndicator}
       ></div>
     </div>
   );
