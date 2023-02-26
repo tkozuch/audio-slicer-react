@@ -112,6 +112,13 @@ canvas {
   border: 1px solid lightblue;
   pointer-events: none;
 }
+.playbar-indicator {
+  width: 1;
+  height: 100%;
+  border: 1px solid rgba(173, 216, 230, 0.5);
+  position: relative;
+  pointer-events: none;
+}
 .time-indicator {
   text-align: center;
   position: absolute;

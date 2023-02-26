@@ -21,6 +21,7 @@ export const FramesContainer = ({
   }); // to prevent drawing super small frames when clicking through container
   const [isAdjusting, setIsAdjusting] = useState(() => mode === "adjust");
   const frameAdjustmentMargin = 1.4; // percent of the parent container width
+  const [playbarIndicatorPosition, setPlaybarIndicatorPosition] = useState(0);
 
   if (minimalFrameWidth - 0.1 <= frameAdjustmentMargin) {
     throw new Error(
@@ -110,6 +111,7 @@ export const FramesContainer = ({
       event,
       waveformCanvas
     );
+    setPlaybarIndicatorPosition(currentMousePosition);
     if (mode === "draw") {
       // prevent accidentaly drawing a frame while clicking through the container quickly
       const isNotAShortClick =
@@ -310,6 +312,10 @@ export const FramesContainer = ({
           ""
         );
       })}
+      <div
+        className="playbar-indicator"
+        style={{ left: playbarIndicatorPosition + "%" }}
+      ></div>
     </div>
   );
 };
