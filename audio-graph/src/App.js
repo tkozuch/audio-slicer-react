@@ -323,7 +323,7 @@ function App() {
         </div>
 
         {/* currentTime is set to StartTime, because the StartTime updates to audio element current time when playing */}
-        <PlayBar audioElement={audioElement} currentTime={time.start}></PlayBar>
+        <PlayBar audioElement={audioElement} time={time} setTime={setTime}></PlayBar>
 
         <div className="down-buttons-wrapper">
           {!isPlaying ? (

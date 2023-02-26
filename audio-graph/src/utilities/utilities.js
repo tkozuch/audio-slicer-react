@@ -13,6 +13,9 @@ export function getMousePosition(event, element) {
 }
 
 export function getMousePositionInPercent(event, element) {
+  if (!element) {
+    throw new Error("Trying to get mouse position in an undefined element.");
+  }
   const px = getMousePosition(event, element);
   return (px / element.getBoundingClientRect().width) * 100;
 }

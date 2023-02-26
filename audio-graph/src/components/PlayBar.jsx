@@ -1,19 +1,20 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import * as utils from "../utilities/utilities";
 
-export const PlayBar = ({ currentTime, audioElement }) => {
+export const PlayBar = ({ time, audioElement, setTime }) => {
   const self = useRef(null);
+  const wrapper = useRef(null);
+  const [isDragging, setIsDragging] = useState(false);
 
-  const displayTime = currentTime ? currentTime.toFixed(2) : 0;
+  const displayTime = time?.start ? time?.start.toFixed(2) : 0;
 
   useEffect(() => {
     let request;
-    // console.log("current time", currentTime);
     (function drawMovingPlayBar() {
       if (self.current && audioElement.current) {
         self.current.style.left =
           utils.timeToPositionPercent(
-            currentTime,
+            time.start,
             audioElement.current.duration
           ) + "%";
       }
@@ -27,12 +28,35 @@ export const PlayBar = ({ currentTime, audioElement }) => {
     return () => {
       cancelAnimationFrame(request);
     };
-  }, [currentTime, audioElement]);
+  }, [time, audioElement]);
+
+  const handleTimeIndicatorDrag = (e) => {
+    if (isDragging) {
+      let mousePosition;
+      if (wrapper?.current) {
+        mousePosition = utils.getMousePositionInPercent(e, wrapper.current);
+      }
+      if (audioElement?.current && mousePosition) {
+        const newStartTime = utils.positionToTimePercent(
+          mousePosition,
+          audioElement.current.duration
+        );
+        setTime({ ...time, start: newStartTime });
+      }
+    }
+  };
 
   return (
-    <div className="play-bar">
+    <div className="play-bar" ref={wrapper}>
       <div className="play-bar__bar" ref={self}>
-        <div className="time-indicator">{displayTime}</div>
+        <div
+          className="time-indicator"
+          onMouseDown={() => setIsDragging(true)}
+          onMouseMove={(e) => handleTimeIndicatorDrag(e)}
+          onMouseUp={() => setIsDragging(false)}
+        >
+          {displayTime}
+        </div>
       </div>
     </div>
   );
