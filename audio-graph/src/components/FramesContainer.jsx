@@ -19,7 +19,11 @@ export const FramesContainer = ({
     mouseMove: null,
     mouseDown: null,
   }); // to prevent drawing super small frames when clicking through container
-  const [isAdjusting, setIsAdjusting] = useState(() => mode === "adjust");
+  const [frameBeingAdjusted, setFrameBeingAdjusted] = useState({
+    id: null,
+    adjustedSide: null, // "start" or "end"
+  });
+  const frameIsBeingAdjusted = frameBeingAdjusted.id !== null;
   const frameAdjustmentMargin = 1.4; // percent of the parent container width
   const [playbarIndicatorPosition, setPlaybarIndicatorPosition] = useState(0);
   const playbarIndicator = useRef(null);
@@ -97,12 +101,12 @@ export const FramesContainer = ({
       }
       setLastMouseActionTime({ ...lastMouseActionTime, mouseDown: Date.now() });
     } else if (mode === "adjust") {
-      const [frame, _] = utils.getNearbyFrameSide(
+      const [frame, side] = utils.getNearbyFrameSide(
         mousePosition,
         frames,
         frameAdjustmentMargin
       );
-      if (frame) setIsAdjusting(true);
+      if (frame) setFrameBeingAdjusted({ id: frame.id, adjustedSide: side });
     }
   };
   const handleWaveformMousMove = (event) => {
@@ -157,62 +161,77 @@ export const FramesContainer = ({
         mouseMove: Date.now(),
       });
     } else if (mode === "adjust") {
-      const [frame, side] = utils.getNearbyFrameSide(
+      const [frame, _] = utils.getNearbyFrameSide(
         currentMousePosition,
         frames,
         frameAdjustmentMargin
       );
+      const shouldChangeCursor = Boolean(frame);
+      if (shouldChangeCursor) event.target.style.cursor = "col-resize";
+      else event.target.style.cursor = "default";
       // console.log("frame, side", frame, side);
-      if (frame) {
-        event.target.style.cursor = "col-resize";
 
-        if (isAdjusting) {
-          const framesCopy = [...frames];
+      if (frameIsBeingAdjusted) {
+        const framesCopy = [...frames];
+        const frameToChange = framesCopy.find(
+          (f) => f.id === frameBeingAdjusted.id
+        );
 
-          if (side === "start") {
-            const frameIsTooSmallForAdjustment =
-              currentMousePosition + minimalFrameWidth >= frame.end;
-            frame.start = frameIsTooSmallForAdjustment
-              ? frame.start
+        if (frameBeingAdjusted.adjustedSide === "start") {
+          const frameIsOverlappingWithAnotherFrame = utils
+            .getFramesOnLeftSide(frameToChange, framesCopy)
+            .some((f) => currentMousePosition < f.end);
+          const frameIsTooSmallForAdjustment =
+            currentMousePosition + minimalFrameWidth >= frameToChange.end;
+
+          frameToChange.start =
+            frameIsTooSmallForAdjustment || frameIsOverlappingWithAnotherFrame
+              ? frameToChange.start
               : currentMousePosition;
-            if (frame.selected) {
-              setTime((time) => {
-                time.start = utils.positionToTimePercent(
-                  frame.start,
-                  audioElement?.current?.duration
-                );
-                return time;
-              });
-            }
-          } else {
-            const frameIsTooSmallForAdjustment =
-              currentMousePosition - minimalFrameWidth <= frame.start;
-            frame.end = frameIsTooSmallForAdjustment
-              ? frame.end
-              : currentMousePosition;
-            if (frame.selected) {
-              setTime((time) => {
-                time.end = utils.positionToTimePercent(
-                  frame.end,
-                  audioElement?.current?.duration
-                );
-                return time;
-              });
-            }
+
+          if (frameToChange.selected) {
+            // change time start if the frame being adjusted is selected
+            setTime((time) => {
+              time.start = utils.positionToTimePercent(
+                frameToChange.start,
+                audioElement?.current?.duration
+              );
+              return time;
+            });
           }
+        } else {
+          const frameIsOverlappingWithAnotherFrame = utils
+            .getFramesOnRightSide(frameToChange, framesCopy)
+            .find((f) => currentMousePosition > f.start);
+          const frameIsTooSmallForAdjustment =
+            currentMousePosition - minimalFrameWidth <= frameToChange.start;
 
-          framesCopy.map((f) => {
-            if (f.id === frame.id) {
-              return frame;
-            } else {
-              return f;
-            }
-          });
-          console.log("(adjust) setting frames: ", frames);
-          setFrames(framesCopy);
+          frameToChange.end =
+            frameIsTooSmallForAdjustment || frameIsOverlappingWithAnotherFrame
+              ? frameToChange.end
+              : currentMousePosition;
+
+          if (frameToChange.selected) {
+            // change time end if the frame being adjusted is selected
+            setTime((time) => {
+              time.end = utils.positionToTimePercent(
+                frameToChange.end,
+                audioElement?.current?.duration
+              );
+              return time;
+            });
+          }
         }
-      } else {
-        event.target.style.cursor = "default";
+
+        framesCopy.map((f) => {
+          if (f.id === frame.id) {
+            return frame;
+          } else {
+            return f;
+          }
+        });
+        console.log("(adjust) setting frames: ", frames);
+        setFrames(framesCopy);
       }
     }
   };
@@ -232,8 +251,8 @@ export const FramesContainer = ({
       );
       setFrames(framesCopy);
     })();
-    if (isAdjusting) {
-      setIsAdjusting(false);
+    if (frameIsBeingAdjusted) {
+      setFrameBeingAdjusted((f) => ({ ...f, id: null }));
     }
   };
   const handleContainerClick = (e) => {

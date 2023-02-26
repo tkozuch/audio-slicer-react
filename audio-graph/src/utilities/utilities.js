@@ -116,3 +116,10 @@ export const getNearbyFrameSide = (mousePosition, frames, margin) => {
   }
   return [false, false];
 };
+
+export const getFramesOnLeftSide = (frame, frames) => {
+  return frames.filter((f) => f.end <= frame.start);
+};
+export const getFramesOnRightSide = (frame, frames) => {
+  return frames.filter((f) => f.start >= frame.end);
+};
