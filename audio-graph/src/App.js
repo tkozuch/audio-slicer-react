@@ -232,7 +232,7 @@ function App() {
     return () => {
       document.removeEventListener("keydown", changeMode);
     };
-  }, []);
+  });
 
   const stop = (e) => {
     setIsPlaying(false);
