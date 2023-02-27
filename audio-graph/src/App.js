@@ -16,8 +16,11 @@ const audioContext = new AudioContext();
 
 function App() {
   // console.log("render start");
+  const modes = ["draw", "adjust", "delete"];
+
   const [frames, setFrames] = useState([]);
-  const [mode, setMode] = useState("draw"); // draw / delete / adjust
+  const [mode, setMode] = useState(modes[0]);
+  console.log("render start: ", mode);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioElement = useRef(null);
   const [audioSource, setAudioSource] = useState(null);
@@ -32,7 +35,7 @@ function App() {
   const selectedFrame = frames.find((f) => f.selected);
   const [links, setLinks] = useState([]);
   const [renderMode, setRenderMode] = useState({
-    keep: true, // means the frames are to keep, if set to false, the frames are the part to delete
+    keep: true, // means the frames are to keep, if set to false, the frames are the part to delete and all the rest should be rendered
     concatenate: false, // means every frame will be in separate file
   });
 
@@ -213,6 +216,24 @@ function App() {
       document.removeEventListener("keydown", playWithSpace);
     };
   }, [isPlaying, time.start]);
+
+  useEffect(() => {
+    const changeMode = (e) => {
+      if (e.key === "Control") {
+        const currentMode = modes.findIndex((m) => m === mode);
+        if (currentMode > -1) {
+          setMode(modes[(currentMode + 1) % modes.length]); // change mode to next
+        } else {
+          throw new Error("Unknown mode");
+        }
+      }
+    };
+    document.addEventListener("keydown", changeMode);
+    return () => {
+      document.removeEventListener("keydown", changeMode);
+    };
+  }, []);
+
   const stop = (e) => {
     setIsPlaying(false);
     if (audioElement.current.currentTime) audioElement.current.currentTime = 0;
@@ -323,7 +344,11 @@ function App() {
         </div>
 
         {/* currentTime is set to StartTime, because the StartTime updates to audio element current time when playing */}
-        <PlayBar audioElement={audioElement} time={time} setTime={setTime}></PlayBar>
+        <PlayBar
+          audioElement={audioElement}
+          time={time}
+          setTime={setTime}
+        ></PlayBar>
 
         <div className="down-buttons-wrapper">
           {!isPlaying ? (
