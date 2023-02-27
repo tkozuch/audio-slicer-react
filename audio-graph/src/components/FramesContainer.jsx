@@ -180,7 +180,7 @@ export const FramesContainer = ({
         if (frameBeingAdjusted.adjustedSide === "start") {
           const frameIsOverlappingWithAnotherFrame = utils
             .getFramesOnLeftSide(frameToChange, framesCopy)
-            .some((f) => currentMousePosition < f.end);
+            .some((f) => currentMousePosition <= f.end);
           const frameIsTooSmallForAdjustment =
             currentMousePosition + minimalFrameWidth >= frameToChange.end;
 
@@ -202,7 +202,7 @@ export const FramesContainer = ({
         } else {
           const frameIsOverlappingWithAnotherFrame = utils
             .getFramesOnRightSide(frameToChange, framesCopy)
-            .find((f) => currentMousePosition > f.start);
+            .find((f) => currentMousePosition >= f.start);
           const frameIsTooSmallForAdjustment =
             currentMousePosition - minimalFrameWidth <= frameToChange.start;
 
