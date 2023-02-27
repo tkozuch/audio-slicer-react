@@ -38,6 +38,10 @@ function App() {
     keep: true, // means the frames are to keep, if set to false, the frames are the part to delete and all the rest should be rendered
     concatenate: false, // means every frame will be in separate file
   });
+  const [popUpsOpen, setPopUpsOpen] = useState({
+    shortcuts: false,
+    links: false,
+  });
 
   const prepareDownloadLinks = useCallback(
     function prepareDownloadLinks() {
@@ -118,6 +122,7 @@ function App() {
           links.push(link);
         });
         setLinks(links);
+        setPopUpsOpen((popups) => ({ ...popups, links: true }));
       } else {
         alert(
           "No clips drawn. Plis draw a clip that you want to slice - click and drag with cursor on the waveform, after selecting file."
@@ -268,6 +273,18 @@ function App() {
   // console.log("render end");
   return (
     <div className="App">
+      <div
+        className="overlay"
+        style={{ display: popUpsOpen.links ? "unset" : "none" }}
+      >
+        <button
+          className="close-btn"
+          onClick={() => setPopUpsOpen((p) => ({ ...p, links: false }))}
+        >
+          X
+        </button>
+        <DownloadLinks links={links}></DownloadLinks>
+      </div>
       <audio id="audio" controls ref={audioElement} src={audioSource}></audio>
       <Container className="main">
         <div className="upper-row">
@@ -422,8 +439,6 @@ function App() {
             SLICE
           </button>
         </div>
-
-        <DownloadLinks links={links}></DownloadLinks>
       </Container>
     </div>
   );
