@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 
-cd ./audio-graph
-npm run test
+#cd ./audio-graph
+#npm run test

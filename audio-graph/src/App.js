@@ -1,5 +1,13 @@
 import "./App.css";
+
 import Container from "react-bootstrap/Container";
+import { ReactComponent as InfoSvg } from "./img/info.svg";
+import { ReactComponent as PlaySvg } from "./img/play.svg";
+import { ReactComponent as StopSvg } from "./img/stop.svg";
+import { ReactComponent as UndoSvg } from "./img/undo.svg";
+import { ReactComponent as SliceSvg } from "./img/slice.svg";
+import { ReactComponent as PauseSvg } from "./img/pause.svg";
+import { ReactComponent as ChooseFileSvg } from "./img/choose_file.svg";
 
 import { useEffect, useState, useRef, useCallback } from "react";
 
@@ -7,15 +15,21 @@ import { FramesContainer } from "./components/FramesContainer";
 import { drawAudio } from "./utilities/drawWaveform";
 import { positionToTimePercent, frameToSample } from "./utilities/utilities";
 import { PlayBar } from "./components/PlayBar";
-import { DownloadLinks } from "./components/DownloadLinks";
 import { createAudioBlobForDownload } from "./utilities/prepareAudioForDownload";
+import { getFramesToRender } from "./utilities/utilities";
+import {
+  PopUpTemplate,
+  ShortcutsPopUp,
+  DownloadLinksPopUp,
+  LoadingPopUp,
+} from "./components/PopUps";
 
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
 const audioContext = new AudioContext();
 
 function App() {
-  // console.log("render start");
+  console.log("render start");
   const modes = ["draw", "adjust", "delete"];
 
   const [frames, setFrames] = useState([]);
@@ -30,6 +44,7 @@ function App() {
     end: audioElement?.current?.duration,
   });
   const [filename, setFilename] = useState();
+  const fileWasChosen = Boolean(filename);
   const [audioBuffer, setAudioBuffer] = useState();
   const framesContainerRef = useRef();
   const selectedFrame = frames.find((f) => f.selected);
@@ -41,7 +56,9 @@ function App() {
   const [popUpsOpen, setPopUpsOpen] = useState({
     shortcuts: false,
     links: false,
+    loading: false,
   });
+  const popUpIsOpen = Object.values(popUpsOpen).some((v) => v);
 
   const prepareDownloadLinks = useCallback(
     function prepareDownloadLinks() {
@@ -173,11 +190,9 @@ function App() {
     }
   }, [mode]);
 
-  const initializeAudioElement = (event) => {
-    console.log("initializing audio element");
+  const initializeAudio = (event) => {
     var files = event.target.files;
     setAudioSource(URL.createObjectURL(files[0]));
-    console.log("audioSource set");
   };
   useEffect(() => {
     const current = audioElement.current;
@@ -269,77 +284,99 @@ function App() {
       throw new Error("this should not happen");
     }
   };
+  const handleFileChange = (event) => {
+    setPopUpsOpen((p) => ({ ...p, loading: true }));
+    const promise = new Promise((resolve, reject) => {
+      initializeAudio(event);
+      drawAudio(event, audioContext, setAudioBuffer, resolve);
+    });
+    promise.then((v) => {
+      setFilename(event.target.files[0].name);
+      setPopUpsOpen((p) => ({ ...p, loading: false }));
+    });
+  };
 
   // console.log("render end");
   return (
     <div className="App">
-      <div
-        className="overlay"
-        style={{ display: popUpsOpen.links ? "unset" : "none" }}
-      >
-        <button
-          className="close-btn"
-          onClick={() => setPopUpsOpen((p) => ({ ...p, links: false }))}
-        >
-          X
-        </button>
-        <DownloadLinks links={links}></DownloadLinks>
-      </div>
+      {popUpIsOpen && (
+        <div className="overlay">
+          <PopUpTemplate>
+            {(popUpsOpen.links && (
+              <DownloadLinksPopUp
+                links={links}
+                setPopUpsOpen={setPopUpsOpen}
+              ></DownloadLinksPopUp>
+            )) ||
+              (popUpsOpen.shortcuts && (
+                <ShortcutsPopUp setPopUpsOpen={setPopUpsOpen}></ShortcutsPopUp>
+              )) ||
+              (popUpsOpen.loading && (
+                <LoadingPopUp setPopUpsOpen={setPopUpsOpen}></LoadingPopUp>
+              ))}
+          </PopUpTemplate>
+        </div>
+      )}
       <audio id="audio" controls ref={audioElement} src={audioSource}></audio>
+
       <Container className="main">
         <div className="upper-row">
-          <input
-            type="file"
-            id="upload"
-            onChange={(event) => {
-              initializeAudioElement(event);
-              drawAudio(event, audioContext, setAudioBuffer);
-              setFilename(event.target.files[0].name);
-            }}
-          />
+          <label className="file-label">
+            <input type="file" id="upload" onChange={handleFileChange} />
+            <div className="button button-important">Choose file</div>
+            {filename && <span className="file-name">{filename}</span>}
+          </label>
 
+          <div className="mode-btn-wrapper">
+            <button
+              id="mark-btn"
+              onClick={() => {
+                setMode("draw");
+              }}
+              className={
+                "button mode-btn" + (mode === "draw" ? " selected" : "")
+              }
+            >
+              Mark
+            </button>
+            {/* Show only when the mark or adjust are not selected */}
+            <div
+              className="mode-btn__divider"
+              style={{ visibility: mode !== "delete" ? "hidden" : "visible" }}
+            />
+            <button
+              id="adjust-btn"
+              onClick={() => {
+                setMode("adjust");
+              }}
+              className={
+                "button mode-btn" + (mode === "adjust" ? " selected" : "")
+              }
+            >
+              Adjust
+            </button>
+            {/* Show only when the delete or adjust are not selected */}
+            <div
+              className="mode-btn__divider"
+              style={{ visibility: mode !== "draw" ? "hidden" : "visible" }}
+            />
+            <button
+              id="delete-btn"
+              onClick={() => {
+                setMode("delete");
+              }}
+              className={
+                "button mode-btn" + (mode === "delete" ? " selected" : "")
+              }
+            >
+              Delete
+            </button>
+          </div>
           <button
-            id="mark-btn"
-            onClick={() => {
-              setMode("draw");
-            }}
-            className={
-              mode === "draw" ? "btn btn-primary" : "btn btn-secondary"
-            }
+            className="info-btn"
+            onClick={() => setPopUpsOpen((s) => ({ ...s, shortcuts: true }))}
           >
-            Mark
-          </button>
-
-          <button
-            id="adjust-btn"
-            onClick={() => {
-              setMode("adjust");
-            }}
-            className={
-              mode === "adjust" ? "btn btn-primary" : "btn btn-secondary"
-            }
-          >
-            Adjust
-          </button>
-
-          <button
-            id="delete-btn"
-            onClick={() => {
-              setMode("delete");
-            }}
-            className={
-              mode === "delete" ? "btn btn-primary" : "btn btn-secondary"
-            }
-          >
-            Delete
-          </button>
-
-          <button
-            id="undo-btn"
-            onClick={() => undoLastFrame()}
-            className="btn btn-warning"
-          >
-            Undo
+            <InfoSvg />
           </button>
         </div>
 
@@ -357,7 +394,20 @@ function App() {
             setTime={setTime}
             audioElement={audioElement}
             selfRef={framesContainerRef}
+            renderMode={renderMode}
           ></FramesContainer>
+          {!fileWasChosen && (
+            <label className="file-label choose-file-prompt">
+              <input
+                type="file"
+                id="upload"
+                className="large-file-input"
+                onChange={handleFileChange}
+              />
+              Choose file
+              <ChooseFileSvg />
+            </label>
+          )}
         </div>
 
         {/* currentTime is set to StartTime, because the StartTime updates to audio element current time when playing */}
@@ -372,40 +422,48 @@ function App() {
             <button
               sm="2"
               id="playBtn"
-              className="btn btn-success play-btn"
+              className="button icon-btn"
               onClick={(e) => {
                 e.target.blur();
                 play();
               }}
             >
-              PLAY
+              <PlaySvg />
             </button>
           ) : (
             <button
               sm="2"
               id="pauseBtn"
-              className="btn btn-warning pause-btn"
+              className="button icon-btn"
               onClick={(e) => {
                 e.target.blur();
                 pause();
               }}
             >
-              PAUSE
+              <PauseSvg />
             </button>
           )}
-
           <button
             id="stopBtn"
-            className="btn btn-danger stop-btn"
+            className="button icon-btn"
             onClick={() => {
               stop();
             }}
           >
-            STOP
+            <StopSvg />
+          </button>
+          <button
+            id="undo-btn"
+            onClick={() => undoLastFrame()}
+            className="button icon-btn"
+          >
+            <UndoSvg />
           </button>
 
           <div className="options-wrapper">
+            <label htmlFor="time-mode">Time mode: </label>
             <select
+              id="time-mode"
               className="options-select"
               onClick={handleKeepThrowOutSelect}
               defaultValue={renderMode.keep ? "keep" : "delete"}
@@ -413,7 +471,11 @@ function App() {
               <option value="keep">Keep selected time</option>
               <option value="delete">Throw out selected time</option>
             </select>
+          </div>
+          <div className="options-wrapper">
+            <label htmlFor="render-mode">Render mode: </label>
             <select
+              id="render-mode"
               className="options-select"
               onClick={handleSingleMultipleSelect}
               defaultValue={!renderMode.concatenate ? "multiple" : "single"}
@@ -423,9 +485,8 @@ function App() {
               Render to single file
             </select>
           </div>
-
           <button
-            className="btn btn-primary slice-btn"
+            className="button button-important slice-btn"
             onClick={() =>
               prepareDownloadLinks(
                 frames,
@@ -436,78 +497,12 @@ function App() {
               )
             }
           >
-            SLICE
+            SLICE <SliceSvg />
           </button>
         </div>
       </Container>
     </div>
   );
-}
-
-function getFramesToRender(renderMode, frames) {
-  const audioDuration = 100; // in percent
-
-  if (frames.length === 0) {
-    throw new Error(
-      "This should not happen. You passed empty frames to render"
-    );
-  }
-  let toRender = [];
-  const sortedFrames = frames.sort((a, b) => a.start - b.start);
-  console.log("sorted frames", sortedFrames);
-  console.log("mode: ", renderMode);
-
-  if (renderMode.keep) {
-    console.log("mode keep");
-    toRender = toRender.concat(sortedFrames);
-  }
-  // mode "throw out" (throw out the marked frames)
-  else {
-    console.log("in else", sortedFrames.length);
-    // i <= sortedFrames.length and not i < sF.length -> on purpose, because after
-    // last frame there can still be place till the end - a fragment to render.
-    for (var i = 0; i <= sortedFrames.length; i++) {
-      console.log("in loop frame");
-      if (i === 0) {
-        let start = 0;
-        let end = sortedFrames[i].start;
-        console.log(`i = ${i}: `, start, end);
-        // first frame didn't start at "start" (0s)
-        if (start !== end) {
-          toRender.push({
-            start,
-            end,
-          });
-        }
-      }
-      // is not last frame
-      else if (i !== sortedFrames.length) {
-        let start = sortedFrames[i - 1].end; // end of previous frame
-        let end = sortedFrames[i].start;
-        // in case two frames are adjacent
-        console.log(`i = ${i}: `, start, end);
-        if (start !== end) {
-          toRender.push({
-            start,
-            end,
-          });
-        }
-      } else {
-        let start = sortedFrames[i - 1].end;
-        let end = audioDuration;
-        // last frame didn't end at the waveform end
-        console.log(`i = ${i}: `, start, end);
-        if (start !== end) {
-          toRender.push({
-            start,
-            end,
-          });
-        }
-      }
-    }
-  }
-  console.log("to render ", toRender);
-  return toRender;
 }
 
 export default App;

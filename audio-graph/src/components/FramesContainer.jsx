@@ -9,6 +9,7 @@ export const FramesContainer = ({
   setTime,
   audioElement,
   selfRef,
+  renderMode,
 }) => {
   // console.log("render container start");
   const [isMouseDown, setIsMouseDown] = useState(false);
@@ -118,6 +119,7 @@ export const FramesContainer = ({
     );
     setPlaybarIndicatorPosition(currentMousePosition);
     if (mode === "draw") {
+      console.log("drawingggg");
       // prevent accidentaly drawing a frame while clicking through the container quickly
       const isNotAShortClick =
         lastMouseActionTime.mouseMove - lastMouseActionTime.mouseDown > 100;
@@ -331,15 +333,20 @@ export const FramesContainer = ({
       }}
     >
       {frames.map(({ start, end, id, selected }) => {
-        return start !== 0 && end !== 0 ? (
-          <div
-            key={id}
-            className={"frame" + (selected ? " selected" : "")}
-            onClick={(e) => handleFrameClick(e, id)}
-            style={{ left: start + "%", width: end - start + "%" }}
-          ></div>
-        ) : (
-          ""
+        return (
+          start !== 0 &&
+          end !== 0 && (
+            <div
+              key={id}
+              className={
+                "frame" +
+                (selected ? " selected" : "") +
+                (renderMode.keep ? " keep" : " delete")
+              }
+              onClick={(e) => handleFrameClick(e, id)}
+              style={{ left: start + "%", width: end - start + "%" }}
+            ></div>
+          )
         );
       })}
       <div

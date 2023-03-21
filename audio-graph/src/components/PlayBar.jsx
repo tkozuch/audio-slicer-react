@@ -37,6 +37,13 @@ export const PlayBar = ({ time, audioElement, setTime }) => {
         mousePosition = utils.getMousePositionInPercent(e, wrapper.current);
       }
       if (audioElement?.current && mousePosition) {
+        if (mousePosition < 0) {
+          setTime({ ...time, start: 0 });
+          return;
+        }
+        if (mousePosition > 100) {
+          mousePosition = 100; // 100% - this will guarantee setting the start time to a maximum of  - the end of track
+        }
         const newStartTime = utils.positionToTimePercent(
           mousePosition,
           audioElement.current.duration
@@ -55,7 +62,7 @@ export const PlayBar = ({ time, audioElement, setTime }) => {
           onMouseMove={(e) => handleTimeIndicatorDrag(e)}
           onMouseUp={() => setIsDragging(false)}
         >
-          {displayTime}
+          <div className="time-indicator__text">{displayTime}</div>
         </div>
       </div>
     </div>

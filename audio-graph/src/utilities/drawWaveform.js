@@ -1,10 +1,14 @@
-export const drawAudio = (event, audioContext, setAudioBuffer) => {
+export const drawAudio = (event, audioContext, setAudioBuffer, callback) => {
   var files = event.target.files;
   files[0].arrayBuffer().then((arrayBuffer) => {
-    return audioContext.decodeAudioData(arrayBuffer).then((audioBuffer) => {
-      setAudioBuffer(audioBuffer);
-      draw(normalizeData(filterData(audioBuffer)));
-    });
+    let result = audioContext
+      .decodeAudioData(arrayBuffer)
+      .then((audioBuffer) => {
+        setAudioBuffer(audioBuffer);
+        draw(normalizeData(filterData(audioBuffer)));
+        callback();
+      });
+    return result;
   });
 };
 /**
@@ -86,7 +90,7 @@ const draw = (normalizedData) => {
  */
 const drawLineSegment = (ctx, x, height, width, isEven) => {
   ctx.lineWidth = 1; // how thick the line is
-  ctx.fillStyle = "#fff"; // what color our line is
+  ctx.fillStyle = "#ffffff"; // what color our line is
   let heightAdjusted = height > 1 ? height : 1; // This is for purpose of not having a visible breaks in the waveform (caused by too small rectangle). (height might be actually bigger then 1 here)
   ctx.beginPath();
   ctx.moveTo(x, 0);
