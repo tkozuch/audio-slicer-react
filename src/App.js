@@ -12,10 +12,10 @@ import { ReactComponent as ChooseFileSvg } from "./img/choose_file.svg";
 import { useEffect, useState, useRef, useCallback } from "react";
 
 import { FramesContainer } from "./components/FramesContainer";
-import { drawAudio } from "./utilities/drawWaveform";
+import { drawAudio } from "./utilities/waveform";
 import { positionToTimePercent, frameToSample } from "./utilities/utilities";
 import { PlayBar } from "./components/PlayBar";
-import { createAudioBlobForDownload } from "./utilities/prepareAudioForDownload";
+import { createAudioBlobForDownload } from "./utilities/audioDownload";
 import { getFramesToRender } from "./utilities/utilities";
 import {
   PopUpTemplate,
