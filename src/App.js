@@ -29,12 +29,10 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 const audioContext = new AudioContext();
 
 function App() {
-  console.log("render start");
   const modes = ["draw", "adjust", "delete"];
 
   const [frames, setFrames] = useState([]);
   const [mode, setMode] = useState(modes[0]);
-  console.log("render start: ", mode);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioElement = useRef(null);
   const [audioSource, setAudioSource] = useState(null);
@@ -62,10 +60,8 @@ function App() {
 
   const prepareDownloadLinks = useCallback(
     function prepareDownloadLinks() {
-      console.log("prepare download links");
       if (frames.length > 0) {
         const framesToRender = getFramesToRender(renderMode, frames);
-        console.log("frames to render, ", framesToRender);
         const framesToRenderInSamples = framesToRender.map((frame) => {
           const [sampleStart, sampleEnd] = frameToSample(
             frame,
@@ -77,7 +73,6 @@ function App() {
             end: sampleEnd,
           };
         });
-        console.log("in samples: ", framesToRenderInSamples);
 
         let framesChannelData = framesToRenderInSamples.map((frame) => {
           const [leftData, rightData] = [
@@ -89,13 +84,10 @@ function App() {
             rightChannel: rightData,
           };
         });
-        console.log("frames channel data, ", framesChannelData);
 
         if (renderMode.concatenate) {
           framesChannelData = framesChannelData.reduce(
             (prevVal, currentValue) => {
-              console.log("prev value: ", prevVal);
-              console.log("current val: ", currentValue);
               const leftChannel = new Float32Array([
                 ...prevVal.leftChannel,
                 ...currentValue.leftChannel,
@@ -108,7 +100,6 @@ function App() {
                 leftChannel,
                 rightChannel,
               };
-              console.log("frames data: ", framesData);
 
               return framesData;
             },
@@ -120,7 +111,6 @@ function App() {
           );
           framesChannelData = [framesChannelData];
         }
-        console.log("framesChannelData", framesChannelData);
 
         const dataToDownload = framesChannelData.map((frame) => {
           return createAudioBlobForDownload(
@@ -152,14 +142,9 @@ function App() {
   useEffect(() => {
     let playInterval;
     if (isPlaying) {
-      console.log("is playing");
       playInterval = setInterval(() => {
-        // console.log("interval set");
         setTime({ ...time, start: audioElement.current.currentTime });
-        // console.log("start time: ", audioElement.current.currentTime);
-        console.log("(play interval), time.end: ", time.end);
         if (audioElement.current.currentTime >= time.end) {
-          console.log("time passed");
           audioElement.current.pause();
           setIsPlaying(false);
           selectedFrame
@@ -176,7 +161,6 @@ function App() {
     }
 
     return () => {
-      // console.log("interval UNset. ", time);
       clearInterval(playInterval);
     };
   }, [isPlaying, selectedFrame, time, time.end, setTime]);
@@ -197,7 +181,6 @@ function App() {
   useEffect(() => {
     const current = audioElement.current;
     const handleDurationChange = () => {
-      console.log("setting end time to duration");
       setTime({ start: 0, end: current.duration });
       setFrames([]);
     };
@@ -296,7 +279,6 @@ function App() {
     });
   };
 
-  // console.log("render end");
   return (
     <div className="App">
       {popUpIsOpen && (

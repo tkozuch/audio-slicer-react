@@ -31,12 +31,6 @@ export function timeToPositionPercent(time, audioDuration) {
 }
 
 export function positionToTime(Xcoordinate, containingElement, audioDuration) {
-  console.log(
-    "x con, el1, duration: ",
-    Xcoordinate,
-    containingElement,
-    audioDuration
-  );
   return (
     (Xcoordinate / containingElement.getBoundingClientRect().width) *
     audioDuration
@@ -53,24 +47,12 @@ export function positionToTimePercent(Xcoordinate, audioDuration) {
 }
 
 const frameToDuration = (frameStart, frameEnd, audioDuration) => {
-  console.log(
-    "frame start, frameEnd, containerWidth: ",
-    frameStart,
-    frameEnd,
-    audioDuration
-  );
   const timeStart = (frameStart / 100) * audioDuration;
   const timeEnd = (frameEnd / 100) * audioDuration;
-  console.log("frame to duration", timeStart, timeEnd);
   return [timeStart, timeEnd];
 };
 
 export const frameToSample = (frame, sampleRate, bufferDuration) => {
-  console.log("frame : ", frame);
-  console.log(
-    "frame to duration : ",
-    frameToDuration(frame.start, frame.end, bufferDuration)
-  );
   const [timeStart, timeEnd] = frameToDuration(
     frame.start,
     frame.end,
@@ -161,25 +143,18 @@ export function getFramesToRender(renderMode, frames) {
   }
   let toRender = [];
   const sortedFrames = frames.sort((a, b) => a.start - b.start);
-  console.log("sorted frames", sortedFrames);
-  console.log("mode: ", renderMode);
-
   if (renderMode.keep) {
-    console.log("mode keep");
     toRender = toRender.concat(sortedFrames);
   }
 
   // mode "throw out" (throw out the marked frames)
   else {
-    console.log("in else", sortedFrames.length);
     // i <= sortedFrames.length and not i < sF.length -> on purpose, because after
     // last frame there can still be place till the end - a fragment to render.
     for (var i = 0; i <= sortedFrames.length; i++) {
-      console.log("in loop frame");
       if (i === 0) {
         let start = 0;
         let end = sortedFrames[i].start;
-        console.log(`i = ${i}: `, start, end);
         // first frame didn't start at "start" (0s)
         if (start !== end) {
           toRender.push({
@@ -194,7 +169,6 @@ export function getFramesToRender(renderMode, frames) {
         let start = sortedFrames[i - 1].end; // end of previous frame
         let end = sortedFrames[i].start;
         // in case two frames are adjacent
-        console.log(`i = ${i}: `, start, end);
         if (start !== end) {
           toRender.push({
             start,
@@ -205,7 +179,6 @@ export function getFramesToRender(renderMode, frames) {
         let start = sortedFrames[i - 1].end;
         let end = audioDuration;
         // last frame didn't end at the waveform end
-        console.log(`i = ${i}: `, start, end);
         if (start !== end) {
           toRender.push({
             start,
@@ -215,6 +188,5 @@ export function getFramesToRender(renderMode, frames) {
       }
     }
   }
-  console.log("to render ", toRender);
   return toRender;
 }

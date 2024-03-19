@@ -11,7 +11,6 @@ export const FramesContainer = ({
   selfRef,
   renderMode,
 }) => {
-  // console.log("render container start");
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [startDrawingPosition, setStartDrawingPosition] = useState(null);
   const minimalFrameWidth = 2; // in percent
@@ -36,7 +35,6 @@ export const FramesContainer = ({
   }
 
   const deleteFrame = (id) => {
-    console.log("delete frame event");
     const framesCopy = [...frames];
     const i = framesCopy.findIndex((frame) => frame.id === id);
     framesCopy.splice(i, 1);
@@ -44,16 +42,13 @@ export const FramesContainer = ({
   };
 
   const selectFrame = (id) => {
-    console.log("select frame event");
     const framesCopy = [...frames];
     const toSelect = framesCopy.find((frame) => frame.id === id);
     toSelect.selected = !toSelect.selected;
     framesCopy.forEach((frame) => {
       if (frame.id !== id) frame.selected = false;
     });
-    console.log("frame selected: ", toSelect);
     setFrames(framesCopy);
-    console.log("(selectFrame) setting end time");
     setTime({
       start: utils.positionToTimePercent(
         toSelect.start,
@@ -67,7 +62,6 @@ export const FramesContainer = ({
   };
 
   const deselectAllFrames = (e) => {
-    console.log("deselect frames event");
     if (mode !== "delete") {
       const framesCopy = [...frames];
       framesCopy.forEach((f) => (f.selected = false));
@@ -77,12 +71,10 @@ export const FramesContainer = ({
 
   const handleWaveFormMouseDown = (e) => {
     setDisableClick(false);
-    console.log("mouse down event");
     const waveformCanvas = document.getElementById("waveform");
     const mousePosition = utils.getMousePositionInPercent(e, waveformCanvas);
     if (mode === "draw") {
       const startPosition = mousePosition;
-      console.log("start position: ", startPosition);
       // we want to start drawing only if the click happened outside the frame
       if (!utils.isWithinFrame(startPosition, frames)) {
         setIsMouseDown(true);
@@ -111,7 +103,6 @@ export const FramesContainer = ({
     }
   };
   const handleWaveformMousMove = (event) => {
-    console.log("mouse move event");
     const waveformCanvas = document.getElementById("waveform");
     const currentMousePosition = utils.getMousePositionInPercent(
       event,
@@ -119,7 +110,6 @@ export const FramesContainer = ({
     );
     setPlaybarIndicatorPosition(currentMousePosition);
     if (mode === "draw") {
-      console.log("drawingggg");
       // prevent accidentaly drawing a frame while clicking through the container quickly
       const isNotAShortClick =
         lastMouseActionTime.mouseMove - lastMouseActionTime.mouseDown > 100;
@@ -143,11 +133,6 @@ export const FramesContainer = ({
             : correctedEndPosition > startDrawingPosition
             ? startDrawingPosition + minimalFrameWidth
             : startDrawingPosition - minimalFrameWidth;
-        console.log(
-          "start drawing pos, corrected end pos: ",
-          startDrawingPosition,
-          correctedEndPosition
-        );
         let framesCopy = [...frames];
         const workingFrame = framesCopy.find((f) => f.working);
         workingFrame.start = Math.min(
@@ -171,7 +156,6 @@ export const FramesContainer = ({
       const shouldChangeCursor = Boolean(frame);
       if (shouldChangeCursor) event.target.style.cursor = "col-resize";
       else event.target.style.cursor = "default";
-      // console.log("frame, side", frame, side);
 
       if (frameIsBeingAdjusted) {
         const framesCopy = [...frames];
@@ -232,13 +216,11 @@ export const FramesContainer = ({
             return f;
           }
         });
-        console.log("(adjust) setting frames: ", frames);
         setFrames(framesCopy);
       }
     }
   };
   const handleOnMouseUp = (e) => {
-    console.log("mouse up event");
     setIsMouseDown(false);
     let framesCopy = [...frames];
     const workingFrame = framesCopy.find((f) => f.working);
@@ -258,7 +240,6 @@ export const FramesContainer = ({
     }
   };
   const handleContainerClick = (e) => {
-    console.log("click event");
     const mousePosition = utils.getMousePositionInPercent(e, selfRef.current);
     const frame = utils.isWithinFrame(mousePosition, frames);
     if (!disableClick && !frame) {
@@ -267,7 +248,6 @@ export const FramesContainer = ({
         mousePosition,
         audioElement.current.duration
       );
-      console.log("setting startTime: ", time);
       setLastMouseActionTime(mousePosition);
       setTime({ start: time, end: audioElement.current.duration });
       audioElement.current.currentTime = time;
@@ -278,7 +258,6 @@ export const FramesContainer = ({
     }
   };
   const handleFrameClick = (e, id) => {
-    console.log("frame clicked, id: ", id);
     if (mode === "delete") {
       deleteFrame(id);
     } else if (mode !== "adjust") {
@@ -298,7 +277,6 @@ export const FramesContainer = ({
   };
 
   useEffect(() => {
-    console.log("delete frame useeffect");
     const removeSelectedFrame = (e) => {
       if (e.key === "Delete") {
         const selectedFrame = frames.find((f) => f.selected);
@@ -310,7 +288,6 @@ export const FramesContainer = ({
       document.removeEventListener("keydown", removeSelectedFrame);
     };
   }, [frames]);
-  // console.log("render container end");
   return (
     <div
       id="framesContainer"

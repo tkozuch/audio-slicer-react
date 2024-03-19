@@ -47,8 +47,6 @@ const normalizeData = (filteredData) => {
  * @returns {Array} a normalized array of data
  */
 const draw = (normalizedData) => {
-  // console.log("normalized data", normalizedData);
-
   // set up the canvas
   const canvas = document.querySelector("#waveform");
   const dpr = 1; //window.devicePixelRatio || 1;
