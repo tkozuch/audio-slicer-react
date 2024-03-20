@@ -25,7 +25,7 @@ export function DownloadLinksPopUp({ links, setPopUpsOpen }) {
                   href={link.href}
                   download={`${link.name}__slice-${index}.wav`}
                 >
-                  {`${link.name}__slice-${index}.${link.extension}`}
+                  {`${link.name}__slice-${index}`}
                 </a>
               </li>
             );
