@@ -5,7 +5,7 @@ import { ReactComponent as KeyboardSvg } from "../img/keyboard.svg";
 import { ReactComponent as InfoSvg } from "../img/info.svg";
 
 export const PopUpTemplate = ({ children }) => {
-  return <div className="pop-up">{childrenNNN}</div>;
+  return <div className="pop-up">{children}</div>;
 };
 
 export function DownloadLinksPopUp({ links, setPopUpsOpen }) {

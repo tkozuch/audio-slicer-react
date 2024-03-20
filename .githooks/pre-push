@@ -1,4 +1,0 @@
-echo "Checking build status"
-npm run build
-
-exit 1
