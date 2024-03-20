@@ -25,7 +25,7 @@ export function DownloadLinksPopUp({ links, setPopUpsOpen }) {
                   href={link.href}
                   download={`${link.name}__slice-${index}.wav`}
                 >
-                  {`${link.name}__slice-${index}.{link.extension}`}
+                  {`${link.name}__slice-${index}.${link.extension}`}
                 </a>
               </li>
             );
@@ -95,7 +95,7 @@ export function LoadingPopUp({ setPopUpsOpen }) {
     if (time > 2) {
       setinfoOpen(true);
     }
-  }, [time])
+  }, [time]);
 
   return (
     <div className="pop-up__loading">
