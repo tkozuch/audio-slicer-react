@@ -82,7 +82,7 @@ export const getNearbyFrameSide = (mousePosition, frames, margin) => {
     margin = 0;
   }
 
-  const frameCandidates = []; // for the purpose if there are 2 frames nearby, and the mouse position is within margin range for both of them
+  const frameCandidates = []; // in case there are 2 frames nearby, and the mouse position is within margin range for both of them
 
   for (let i = 0; i < frames.length; i++) {
     if (
@@ -99,7 +99,7 @@ export const getNearbyFrameSide = (mousePosition, frames, margin) => {
   }
 
   if (frameCandidates.length === 2) {
-    // here at most can be 2 frames because only 2 frames can neighbour, considering frames can't overlap each other
+    // here at most can be 2 frames because only 2 frames can neighbor, considering frames can't overlap each other
     const frameNeighbouringWithStart = frameCandidates.find(
       (f) => f.side === "start"
     );
@@ -108,7 +108,7 @@ export const getNearbyFrameSide = (mousePosition, frames, margin) => {
     );
 
     if (!(frameNeighbouringWithStart && frameNeighbouringWithEnd)) {
-      throw new Error("Both frames are neighbouring with the same side.");
+      throw new Error("Both frames are neighboring with the same side.");
     }
 
     const startFrame = frameNeighbouringWithStart.frame;
@@ -137,6 +137,7 @@ export function getFramesToRender(renderMode, frames) {
   const audioDuration = 100; // in percent
 
   if (frames.length === 0) {
+    // just in case, sanity error
     throw new Error(
       "This should not happen. You passed empty frames to render"
     );
@@ -146,7 +147,6 @@ export function getFramesToRender(renderMode, frames) {
   if (renderMode.keep) {
     toRender = toRender.concat(sortedFrames);
   }
-
   // mode "throw out" (throw out the marked frames)
   else {
     // i <= sortedFrames.length and not i < sF.length -> on purpose, because after
@@ -163,7 +163,6 @@ export function getFramesToRender(renderMode, frames) {
           });
         }
       }
-
       // is not last frame
       else if (i !== sortedFrames.length) {
         let start = sortedFrames[i - 1].end; // end of previous frame

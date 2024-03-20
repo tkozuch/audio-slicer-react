@@ -71,9 +71,6 @@ const draw = (normalizedData) => {
     if (height < 0) {
       height = 0;
     }
-    // else if (height > canvas.offsetHeight * 0.9) {
-    //   height = canvas.offsetHeight * 0.9;
-    // }
     drawLineSegment(ctx, x, height, width, (i + 1) % 2);
   }
 };

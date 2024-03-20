@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from "react";
-import * as utils from "../utilities/utilities";
+import * as utils from "../utilities/other";
 
 export const PlayBar = ({ time, audioElement, setTime }) => {
   const self = useRef(null);
@@ -42,7 +42,7 @@ export const PlayBar = ({ time, audioElement, setTime }) => {
           return;
         }
         if (mousePosition > 100) {
-          mousePosition = 100; // 100% - this will guarantee setting the start time to a maximum of  - the end of track
+          mousePosition = 100; // 100% - this will guarantee setting the start time to a maximum - the end of track
         }
         const newStartTime = utils.positionToTimePercent(
           mousePosition,

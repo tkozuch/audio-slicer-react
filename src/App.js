@@ -13,10 +13,10 @@ import { useEffect, useState, useRef, useCallback } from "react";
 
 import { FramesContainer } from "./components/FramesContainer";
 import { drawAudio } from "./utilities/waveform";
-import { positionToTimePercent, frameToSample } from "./utilities/utilities";
+import { positionToTimePercent, frameToSample } from "./utilities/other";
 import { PlayBar } from "./components/PlayBar";
 import { createAudioBlobForDownload } from "./utilities/audioDownload";
-import { getFramesToRender } from "./utilities/utilities";
+import { getFramesToRender } from "./utilities/other";
 import {
   PopUpTemplate,
   ShortcutsPopUp,

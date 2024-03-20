@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 
-import * as utils from "../utilities/utilities";
+import * as utils from "../utilities/other";
 
 export const FramesContainer = ({
   mode,
@@ -30,7 +30,7 @@ export const FramesContainer = ({
 
   if (minimalFrameWidth - 0.1 <= frameAdjustmentMargin) {
     throw new Error(
-      "Adjustment margin very close to the minimal frame width. This can cause unpredictable behaviour when adjusting frames."
+      "Adjustment margin very close to the minimal frame width. This can cause unpredictable behavior when adjusting frames."
     );
   }
 
@@ -335,8 +335,10 @@ export const FramesContainer = ({
   );
 };
 
-// given a frame start point, get maximal position on where the end of the frame can lay
-// so that it doesn't overlap any of the already drawn frames
+/**
+ * given a frame start point, get maximal position on where the end of the frame can lay
+ * so that it doesn't overlap any of the already drawn frames
+ */
 const getMaximalEndingPosition = (start, frames) => {
   // TODO: FIX - below comment is no longer valid
 
