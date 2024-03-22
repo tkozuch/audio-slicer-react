@@ -53,3 +53,7 @@ App is designed for desktop devices, small screen may be not supported at the mo
 # Deployment
 
 To deploy simply push changes to master. This will trigger a Netlify build pipeline.
+
+# Local testing
+
+A `test.mp3` local repository file was provided for testing purposes

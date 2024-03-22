@@ -29,3 +29,4 @@ TODO*
 cypress/*.png
 *.mp3
 *.wav
+!test.mp3
