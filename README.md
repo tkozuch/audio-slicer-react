@@ -4,6 +4,8 @@ https://audio-slicer.netlify.app/
 
 A web client-side app for slicing audio files.
 
+Project originally written a bit longer ago. Lately adjusted only slightly to showcase.
+
 # Usage
 
 User uploads a file, which browser renders as a waveform.
