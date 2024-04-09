@@ -4,7 +4,7 @@ https://audio-slicer.netlify.app/
 
 A web client-side app for slicing audio files.
 
-Project originally written a bit longer ago. Lately adjusted only slightly to showcase.
+Project originally written a while ago. Lately adjusted only slightly to showcase. A candidate for refactoring, but with - in my opinion - interesting functionality.
 
 # Usage
 
